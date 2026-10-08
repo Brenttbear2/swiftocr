@@ -1,0 +1,21 @@
+# Python 環境（可用 pip install -r requirements.txt 重建）
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# 環境變數（含 API Key，絕對不能上傳）
+.env
+
+# 編輯器雜檔
+.vscode/
+.DS_Store
+
+# Claude Code 本地設定（個人環境，不屬於專案）
+.claude/settings.local.json
+
+# 診斷用暫存 log（不納入版控）
+*.log
+
+# 自動化測試產出物（截圖、錄影、JSON 結果，保留在本機）
+test_output/
