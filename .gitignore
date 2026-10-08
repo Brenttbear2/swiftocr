@@ -3,6 +3,11 @@
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
+
+# Node / 前端建置產出（可用 npm install、npm run build 重建）
+node_modules/
+dist/
 
 # 環境變數（含 API Key，絕對不能上傳）
 .env
@@ -17,5 +22,6 @@ __pycache__/
 # 診斷用暫存 log（不納入版控）
 *.log
 
-# 自動化測試產出物（截圖、錄影、JSON 結果，保留在本機）
+# 測試與 UAT 產出物（截圖、匯出結果，保留在本機）
 test_output/
+uat_output/
