@@ -1016,10 +1016,11 @@
       if (model) formData.append('model', model);
 
       const res = await fetch('/api/ocr', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || '辨識失敗，請重試');
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.detail || '辨識失敗，請重試');
       item.status = 'done';
-      item.result = data;
+      // v2 API 回應為 {data, warnings, meta}；階段 2 改寫前，舊畫面沿用扁平格式顯示
+      item.result = { ...body.data, _model: body.meta.model };
       item.editedKeys = {};   // 重新辨識後清除先前的人工修正標記
     } catch (err) {
       item.status = 'error';

@@ -1,0 +1,7 @@
+# 後端執行所需套件（版本固定，確保每台電腦裝到一樣的版本）
+fastapi==0.137.2
+uvicorn[standard]==0.49.0
+python-multipart==0.0.32
+openai==2.43.0
+PyMuPDF==1.27.2.3
+python-dotenv==1.2.2

@@ -11,7 +11,7 @@ start /b cmd /c "ping 127.0.0.1 -n 5 >nul & start http://127.0.0.1:8000"
 echo Starting Invoice OCR service at http://127.0.0.1:8000
 echo Keep this window open. Press Ctrl+C to stop.
 echo.
-"%~dp0.venv\Scripts\python.exe" -m uvicorn main:app --host 127.0.0.1 --port 8000
+"%~dp0.venv\Scripts\python.exe" -m uvicorn main:app --app-dir backend --host 127.0.0.1 --port 8000
 
 echo.
 echo Service stopped.

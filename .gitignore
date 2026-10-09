@@ -25,3 +25,6 @@ dist/
 # 測試與 UAT 產出物（截圖、匯出結果，保留在本機）
 test_output/
 uat_output/
+
+# 個人學習用教學文件（不進版控）
+docs/learn/
