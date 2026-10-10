@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # __file__ 是這個檔案自己的路徑：backend/config.py
 # .parents[0] = backend、.parents[1] = 專案根目錄
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FRONTEND_DIR = PROJECT_ROOT / "frontend"
+FRONTEND_DIR = PROJECT_ROOT / "frontend" / "dist"  # React 打包後的網頁（npm run build 產生）
 
 # 讀取專案根目錄的 .env，把裡面的設定放進環境變數
 load_dotenv(PROJECT_ROOT / ".env")

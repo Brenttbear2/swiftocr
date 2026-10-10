@@ -11,7 +11,7 @@ import time
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 import config
@@ -105,3 +105,13 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 # 必須放在最後：mount("/") 會接住所有網址，放前面的話上面的 API 會收不到請求
 if config.FRONTEND_DIR.is_dir():
     app.mount("/", StaticFiles(directory=config.FRONTEND_DIR, html=True), name="frontend")
+else:
+    # 前端還沒打包時，首頁改成顯示提示，而不是一片空白的 404
+    @app.get("/", include_in_schema=False)
+    def frontend_not_built() -> HTMLResponse:
+        return HTMLResponse(
+            "<h2>前端尚未打包</h2>"
+            "<p>請在 frontend 資料夾執行 <code>npm install</code> 與 <code>npm run build</code> 後重新啟動；"
+            "開發時請改開 <a href='http://localhost:5173'>http://localhost:5173</a>。</p>"
+            "<p>API 文件：<a href='/docs'>/docs</a></p>"
+        )
