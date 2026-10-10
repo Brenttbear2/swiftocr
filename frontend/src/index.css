@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+/* ── 設計規則：全站共用的字型與品牌色 ──
+   在 @theme 裡定義後，className 就能使用 bg-brand、from-brand、to-accent 等名稱。
+   想換主色，只要改這裡。 */
+@theme {
+  --font-sans: "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #4f46e5; /* 靛藍：品牌主色 */
+  --color-accent: #7c3aed; /* 紫：和主色搭配成漸層 */
+  --color-brand-soft: #eef2ff; /* 很淡的靛藍：選中項目的底色 */
+}
+
+/* 全站底色與文字顏色 */
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}

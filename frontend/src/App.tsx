@@ -1,14 +1,13 @@
-// 工作台總指揮：存放畫面需要的資料（狀態），並決定畫面長什麼樣子
-// 步驟 2-1：先確認前端連得上後端，並列出可選的模型
+// 總指揮：保管各畫面共用的資料（狀態），並決定現在要顯示哪一個畫面
 import { useEffect, useState } from "react";
 import { getHealth, getModels, type HealthStatus, type ModelInfo } from "./api";
-
-// 廠商代號 → 畫面上顯示的名稱
-const VENDOR_NAMES = { openai: "OpenAI", google: "Google" };
+import UploadPage from "./UploadPage";
+import WelcomePage from "./WelcomePage";
 
 export default function App() {
-  // ── 狀態：會改變、而且一改變畫面就要跟著更新的資料 ──
-  const [health, setHealth] = useState<HealthStatus | null>(null); // 還沒拿到前是 null
+  // ── 狀態 ──
+  const [page, setPage] = useState<"welcome" | "upload">("welcome"); // 目前顯示的畫面
+  const [health, setHealth] = useState<HealthStatus | null>(null);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [selectedModel, setSelectedModel] = useState(""); // 選中模型的 id
   const [error, setError] = useState("");
@@ -28,85 +27,47 @@ export default function App() {
     load();
   }, []);
 
-  // 從清單中找出目前選中的那個模型（找不到是 undefined）
-  const selected = models.find((m) => m.id === selectedModel);
+  // 沒有設定 API Key 時，辨識一定會失敗，要提醒使用者
+  const keyMissing = health !== null && !health.api_key_configured;
 
   // ── 畫面 ──
   return (
-    <div className="min-h-screen bg-stone-100 text-stone-800">
-      <header className="border-b border-stone-200 bg-white px-6 py-4">
-        <h1 className="text-xl font-bold">發票 OCR 審核工作台</h1>
-        <p className="text-sm text-stone-500">v2 前端（React）· 步驟 2-1：連上後端</p>
+    <div className="flex min-h-screen flex-col">
+      {/* 頂列：只有 logo，點了回到啟動畫面 */}
+      <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center px-6">
+          <button type="button" onClick={() => setPage("welcome")} className="flex items-center gap-2.5">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-brand to-accent text-white shadow-md shadow-brand/30">
+              {/* 閃電圖示（沿用舊版 SwiftOCR 的 logo） */}
+              <svg viewBox="0 0 24 24" fill="currentColor" className="size-5">
+                <path d="M12 2L4 13h6l-1 9 9-13h-6l1-9z" />
+              </svg>
+            </span>
+            <span className="text-lg font-bold tracking-tight">
+              Swift<span className="text-brand">OCR</span>
+            </span>
+          </button>
+        </div>
       </header>
 
-      <main className="mx-auto max-w-3xl space-y-6 p-6">
-        {/* 卡片 1：後端狀態 */}
-        <section className="rounded-lg border border-stone-200 bg-white p-5">
-          <h2 className="mb-3 font-semibold">後端狀態</h2>
-          {error && <p className="text-red-600">❌ {error}</p>}
-          {!error && health === null && <p className="text-stone-500">連線中…</p>}
-          {health && (
-            <ul className="space-y-1">
-              <li>✅ 後端連線正常</li>
-              <li>
-                {health.api_key_configured
-                  ? "✅ 已設定 OpenRouter API Key"
-                  : "⚠️ 尚未設定 OpenRouter API Key（請檢查專案根目錄的 .env）"}
-              </li>
-            </ul>
-          )}
-        </section>
+      {/* 系統有問題時才出現的提示條；一切正常時什麼都不顯示 */}
+      {error && (
+        <div className="border-b border-red-200 bg-red-50 px-6 py-2.5 text-center text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {keyMissing && (
+        <div className="border-b border-amber-200 bg-amber-50 px-6 py-2.5 text-center text-sm text-amber-800">
+          尚未設定 OpenRouter API Key，辨識功能無法使用（請檢查專案根目錄的 .env）
+        </div>
+      )}
 
-        {/* 卡片 2：模型清單 */}
-        <section className="rounded-lg border border-stone-200 bg-white p-5">
-          <h2 className="mb-3 font-semibold">可選的辨識模型（{models.length} 個）</h2>
-
-          <select
-            className="w-full rounded border border-stone-300 px-3 py-2"
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-          >
-            {models.map((m) => (
-              <option key={m.id} value={m.id}>
-                {VENDOR_NAMES[m.category]} · {m.label}
-              </option>
-            ))}
-          </select>
-
-          {selected && (
-            <p className="mt-2 text-sm text-stone-500">
-              {selected.note}　<code className="text-xs">{selected.id}</code>
-            </p>
-          )}
-
-          {/* 同一份狀態的第二種呈現：點表格的列也能切換模型 */}
-          <table className="mt-4 w-full text-left text-sm">
-            <thead className="text-stone-500">
-              <tr>
-                <th className="py-1">廠商</th>
-                <th className="py-1">模型</th>
-                <th className="py-1">說明</th>
-              </tr>
-            </thead>
-            <tbody>
-              {models.map((m) => (
-                <tr
-                  key={m.id}
-                  onClick={() => setSelectedModel(m.id)}
-                  className={
-                    "cursor-pointer border-t border-stone-100 " +
-                    (m.id === selectedModel ? "bg-red-50 font-medium" : "hover:bg-stone-50")
-                  }
-                >
-                  <td className="py-1.5">{VENDOR_NAMES[m.category]}</td>
-                  <td className="py-1.5">{m.label}</td>
-                  <td className="py-1.5 text-stone-500">{m.note}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      </main>
+      {/* 依照 page 狀態，二選一顯示 */}
+      {page === "welcome" ? (
+        <WelcomePage onStart={() => setPage("upload")} />
+      ) : (
+        <UploadPage models={models} selectedModel={selectedModel} onSelectModel={setSelectedModel} />
+      )}
     </div>
   );
 }
