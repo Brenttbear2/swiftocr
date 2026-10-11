@@ -165,14 +165,23 @@ export default function ReviewForm({ item, modelLabel, onEdit, onRecheck, onConf
             <button
               type="button"
               onClick={onConfirm}
-              className="rounded-xl bg-linear-to-r from-brand to-accent px-5 py-2.5 font-medium text-white shadow-md shadow-brand/25 transition hover:opacity-90 focus-visible:ring-4 focus-visible:ring-brand/30 focus-visible:outline-none"
+              className="flex items-center gap-2 rounded-xl bg-linear-to-r from-brand to-accent px-5 py-2.5 font-medium text-white shadow-md shadow-brand/25 transition hover:opacity-90 focus-visible:ring-4 focus-visible:ring-brand/30 focus-visible:outline-none"
             >
-              確認，下一張 →
+              確認，下一張 → <Kbd>Enter</Kbd>
             </button>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+// 按鍵提示，例如 <Kbd>Enter</Kbd>（手機沒有鍵盤，不顯示）；審核畫面的上方也用它
+export function Kbd({ children }: { children: string }) {
+  return (
+    <kbd className="hidden rounded border border-current/25 px-1.5 font-mono text-[11px] leading-5 opacity-75 lg:inline">
+      {children}
+    </kbd>
   );
 }
 
@@ -218,7 +227,7 @@ function Field({ name, item, onEdit, onCommit, onRestore, amount, strong, readOn
           value={value === null ? "" : String(value)}
           onChange={(e) => onEdit(name, toValue(e.target.value))}
           onBlur={onCommit}
-          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()} // 按 Enter 也算改完
+          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()} // 按 Enter 也算改完（再按一次就是確認）
           readOnly={readOnly}
           placeholder={placeholder ?? "無法辨識"}
           inputMode={amount ? "numeric" : undefined}

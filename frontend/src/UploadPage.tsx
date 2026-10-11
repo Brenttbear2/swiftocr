@@ -1,10 +1,12 @@
-// 上傳畫面：還沒有發票時是一個大投放區；放入後變成「上方工具列＋發票縮圖磚牆」，點一張進入審核
+// 上傳畫面：還沒有發票時是一個大投放區；放入後變成「上方工具列（統計、匯出）＋發票縮圖磚牆」，點一張進入審核
 import { useState } from "react";
 import type { InvoiceData, ModelInfo } from "./api";
 import InvoiceTile from "./InvoiceTile";
 import ModelPicker from "./ModelPicker";
 import ReviewPage from "./ReviewPage";
+import { ExportMenu, StatsMenu } from "./ReportMenus";
 import { countWarnings, type FieldKey, type QueueItem } from "./invoice";
+import type { ExportFormat } from "./report";
 
 type Props = {
   models: ModelInfo[];
@@ -17,11 +19,12 @@ type Props = {
   onEditField: (id: string, key: FieldKey, value: InvoiceData[FieldKey]) => void; // 審核時改了一個欄位
   onRecheck: (id: string, data: InvoiceData) => void; // 改完了，請後端重新檢查
   onConfirm: (id: string, confirmed: boolean) => void; // 確認／取消確認
+  onExport: (format: ExportFormat) => void; // 匯出已確認的發票
 };
 
 export default function UploadPage(props: Props) {
   const { models, selectedModel, onSelectModel, items, onAddFiles, onRetry, onClear } = props;
-  const { onEditField, onRecheck, onConfirm } = props;
+  const { onEditField, onRecheck, onConfirm, onExport } = props;
   const [dragging, setDragging] = useState(false); // 是否有檔案正被拖進畫面
   const [openId, setOpenId] = useState<string | null>(null); // 正在審核的那一張（null = 在總覽）
 
@@ -130,13 +133,22 @@ export default function UploadPage(props: Props) {
                 {errorCount > 0 && <span className="text-red-700">失敗 {errorCount}</span>}
               </p>
 
-              <button
-                type="button"
-                onClick={onClear}
-                className="ml-auto rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-              >
-                清除全部
-              </button>
+              {/* 右邊：統計、匯出、清除 */}
+              <div className="ml-auto flex items-center gap-2">
+                <StatsMenu items={items} models={models} />
+                <ExportMenu
+                  confirmedCount={confirmedCount}
+                  unconfirmedCount={checkCount + todoCount}
+                  onExport={onExport}
+                />
+                <button
+                  type="button"
+                  onClick={onClear}
+                  className="rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                >
+                  清除全部
+                </button>
+              </div>
             </div>
           </div>
 

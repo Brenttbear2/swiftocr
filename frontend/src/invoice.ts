@@ -12,6 +12,7 @@ export type QueueItem = {
   data: InvoiceData | null; // 目前的欄位值：一開始等於 AI 的結果，人工修改後跟著變
   warnings: RuleWarning[]; // 目前的提醒：人工修改後由後端重新檢查
   confirmed: boolean; // 使用者是否已按「確認」
+  exported: boolean; // 確認後已經匯出過（之後再修改或重新確認，就變回 false）
   error: string; // 失敗時的原因
 };
 

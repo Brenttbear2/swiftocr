@@ -15,6 +15,8 @@
   --animate-scan-loop: scan 1.8s ease-in-out infinite;
   /* 啟動畫面的資料卡欄位依序浮現 */
   --animate-reveal: reveal 0.45s ease-out both;
+  /* 審核時按確認：印章從大到小蓋下去（曲線超過 1，會稍微壓過頭再彈回來） */
+  --animate-stamp: stamp 0.35s cubic-bezier(0.3, 1.4, 0.5, 1) both;
 
   @keyframes scan {
     0% { top: 0%; opacity: 0; }
@@ -25,6 +27,10 @@
   @keyframes reveal {
     from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: none; }
+  }
+  @keyframes stamp {
+    from { opacity: 0; transform: scale(1.8) rotate(-14deg); }
+    to { opacity: 1; transform: scale(1) rotate(-6deg); }
   }
 }
 

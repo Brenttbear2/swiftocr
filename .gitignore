@@ -26,5 +26,7 @@ dist/
 test_output/
 uat_output/
 
-# 個人學習用教學文件（不進版控）
+# 個人學習用教學文件、重構計畫、UAT 檢查表（只留在本機，版控只放程式碼）
 docs/learn/
+docs/重構計畫.md
+docs/UAT檢查表.md

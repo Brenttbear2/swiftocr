@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { checkInvoice, getHealth, getModels, recognizeInvoice, type HealthStatus, type InvoiceData, type ModelInfo } from "./api";
 import { mergeWarnings, type FieldKey, type QueueItem } from "./invoice";
+import { downloadReport, type ExportFormat } from "./report";
 import UploadPage from "./UploadPage";
 import WelcomePage from "./WelcomePage";
 
@@ -34,6 +35,19 @@ export default function App() {
   // 沒有設定 API Key 時，辨識一定會失敗，要提醒使用者
   const keyMissing = health !== null && !health.api_key_configured;
 
+  // 已確認、但還沒匯出的張數。資料只存在這個分頁裡，關掉就沒了
+  const unsavedCount = items.filter((it) => it.confirmed && !it.exported).length;
+
+  // 有還沒匯出的發票時，關閉或重新整理分頁前，請瀏覽器跳出「確定要離開嗎？」
+  useEffect(() => {
+    if (unsavedCount === 0) return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault(); // 取消「直接離開」，瀏覽器就會先問使用者
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [unsavedCount]);
+
   // ── 佇列的操作 ──
 
   // 修改佇列中某一張的部分欄位：不動原本的陣列，而是做出一份新的陣列交給 React
@@ -43,7 +57,7 @@ export default function App() {
 
   // 辨識一張：標成「辨識中」→ 呼叫後端 → 依結果標成「完成」或「失敗」
   async function recognize(id: string, file: File, model: string) {
-    updateItem(id, { status: "running", model, error: "", confirmed: false });
+    updateItem(id, { status: "running", model, error: "", confirmed: false, exported: false });
     try {
       const result = await recognizeInvoice(file, model);
       // 目前的欄位與提醒，一開始就是 AI 的結果；result 本身另外留著，之後比對「改了哪些」
@@ -66,6 +80,7 @@ export default function App() {
       data: null,
       warnings: [],
       confirmed: false,
+      exported: false,
       error: "",
     }));
     setItems((prev) => [...prev, ...newItems]);
@@ -76,10 +91,12 @@ export default function App() {
 
   // ── 審核的操作 ──
 
-  // 使用者改了一個欄位：只改畫面上的值，還不檢查（打字打到一半不用檢查）
+  // 使用者改了一個欄位：只改畫面上的值，還不檢查（打字打到一半不用檢查）；改過就要重新匯出
   function editField(id: string, key: FieldKey, value: InvoiceData[FieldKey]) {
     setItems((prev) =>
-      prev.map((item) => (item.id === id && item.data ? { ...item, data: { ...item.data, [key]: value } } : item)),
+      prev.map((item) =>
+        item.id === id && item.data ? { ...item, data: { ...item.data, [key]: value }, exported: false } : item,
+      ),
     );
   }
 
@@ -105,11 +122,20 @@ export default function App() {
 
   // 按「確認」或「取消確認」
   function setConfirmed(id: string, confirmed: boolean) {
-    updateItem(id, { confirmed });
+    updateItem(id, { confirmed, exported: false });
   }
 
-  // 清除全部：先把縮圖的暫時網址還給瀏覽器（釋放記憶體），再清空佇列
+  // 匯出已確認的發票，並記下「這些已經匯出過」
+  function exportConfirmed(format: ExportFormat) {
+    downloadReport(items, models, format);
+    setItems((prev) => prev.map((item) => (item.confirmed ? { ...item, exported: true } : item)));
+  }
+
+  // 清除全部：有還沒匯出的先問一下；再把縮圖的暫時網址還給瀏覽器（釋放記憶體），清空佇列
   function clearAll() {
+    if (unsavedCount > 0 && !window.confirm(`還有 ${unsavedCount} 張已確認的發票還沒匯出，清除後就找不回來了。確定要清除嗎？`)) {
+      return;
+    }
     items.forEach((item) => URL.revokeObjectURL(item.previewUrl));
     setItems([]);
   }
@@ -149,6 +175,7 @@ export default function App() {
           onEditField={editField}
           onRecheck={recheck}
           onConfirm={setConfirmed}
+          onExport={exportConfirmed}
         />
       )}
 
