@@ -1,16 +1,48 @@
 @import "tailwindcss";
 
-/* ── 設計規則：全站共用的字型與品牌色 ──
-   在 @theme 裡定義後，className 就能使用 bg-brand、from-brand、to-accent 等名稱。
+/* ── 設計規則：全站共用的字型、品牌色與動畫 ──
+   在 @theme 裡定義後，className 就能使用 font-mono、bg-brand、animate-scan 等名稱。
    想換主色，只要改這裡。 */
 @theme {
   --font-sans: "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Noto Sans TC", ui-monospace, monospace; /* 發票號碼、統編、金額、日期 */
   --color-brand: #4f46e5; /* 靛藍：品牌主色 */
   --color-accent: #7c3aed; /* 紫：和主色搭配成漸層 */
   --color-brand-soft: #eef2ff; /* 很淡的靛藍：選中項目的底色 */
+
+  /* 掃描光：啟動畫面掃一次；縮圖辨識中時一直重複 */
+  --animate-scan: scan 2.6s ease-in-out 0.4s both;
+  --animate-scan-loop: scan 1.8s ease-in-out infinite;
+  /* 啟動畫面的資料卡欄位依序浮現 */
+  --animate-reveal: reveal 0.45s ease-out both;
+
+  @keyframes scan {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
 }
 
 /* 全站底色與文字顏色 */
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+/* 收據紙條底部的鋸齒撕邊 */
+.receipt-edge {
+  height: 10px;
+  background:
+    linear-gradient(135deg, #fff 50%, transparent 50%) 0 0 / 12px 10px repeat-x,
+    linear-gradient(225deg, #fff 50%, transparent 50%) 0 0 / 12px 10px repeat-x;
+}
+
+/* 啟動畫面漸層區上的淡淡點狀紋路 */
+.dot-grid {
+  background-image: radial-gradient(rgb(255 255 255 / 0.18) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
