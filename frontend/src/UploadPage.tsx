@@ -14,6 +14,10 @@ type Props = {
   onSelectModel: (id: string) => void; // 使用者選了某個模型時呼叫
   items: QueueItem[];
   onAddFiles: (files: File[]) => void; // 使用者放進檔案時呼叫
+  autoRecognize: boolean; // 放進來就自動辨識嗎（關掉的話要按「開始辨識」）
+  onAutoRecognizeChange: (on: boolean) => void; // 切換自動辨識
+  onStart: () => void; // 手動模式按「開始辨識」
+  onRemove: (id: string) => void; // 移除一張還沒辨識的
   onRetry: (item: QueueItem) => void; // 使用者按「重試」時呼叫
   onClear: () => void; // 使用者按「清除全部」時呼叫
   onEditField: (id: string, key: FieldKey, value: InvoiceData[FieldKey]) => void; // 審核時改了一個欄位
@@ -25,6 +29,7 @@ type Props = {
 export default function UploadPage(props: Props) {
   const { models, selectedModel, onSelectModel, items, onAddFiles, onRetry, onClear } = props;
   const { onEditField, onRecheck, onConfirm, onExport } = props;
+  const { autoRecognize, onAutoRecognizeChange, onStart, onRemove } = props;
   const [dragging, setDragging] = useState(false); // 是否有檔案正被拖進畫面
   const [openId, setOpenId] = useState<string | null>(null); // 正在審核的那一張（null = 在總覽）
 
@@ -37,7 +42,8 @@ export default function UploadPage(props: Props) {
   const checkCount = done.filter((it) => !it.confirmed && countWarnings(it) > 0).length;
   const todoCount = done.length - confirmedCount - checkCount; // 沒有疑問、等你看一眼
   const errorCount = items.filter((it) => it.status === "error").length;
-  const pendingCount = items.length - done.length - errorCount;
+  const idleCount = items.filter((it) => it.status === "idle").length; // 手動模式下還沒按開始的
+  const pendingCount = items.length - done.length - errorCount - idleCount; // 排隊中＋辨識中
 
   // 把瀏覽器給的檔案清單（FileList）轉成一般陣列，交給 App
   function handleFiles(list: FileList | null) {
@@ -50,7 +56,15 @@ export default function UploadPage(props: Props) {
     return models.find((m) => m.id === id)?.label ?? id;
   }
 
-  const picker = <ModelPicker models={models} selectedModel={selectedModel} onSelect={onSelectModel} />;
+  const picker = (
+    <ModelPicker
+      models={models}
+      selectedModel={selectedModel}
+      onSelect={onSelectModel}
+      autoRecognize={autoRecognize}
+      onAutoRecognizeChange={onAutoRecognizeChange}
+    />
+  );
 
   return (
     // 整個畫面都可以放檔案，不用對準某個框
@@ -81,7 +95,9 @@ export default function UploadPage(props: Props) {
               {/* 模型：平常只顯示目前選的，點開才看到全部（放在上方，選單往下打開不會超出畫面） */}
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-2 pt-1 pb-3">
                 {picker}
-                <p className="text-sm text-slate-400">放入的發票都會用這個模型辨識</p>
+                <p className="text-sm text-slate-400">
+                  {autoRecognize ? "放入的發票都會用這個模型辨識" : "放入後按「開始辨識」才會送出，送出前可以再換模型"}
+                </p>
               </div>
 
               {/* 投放區：整塊是 label，點它就等於點了裡面隱藏的檔案選擇框 */}
@@ -123,6 +139,17 @@ export default function UploadPage(props: Props) {
                 <FileInput disabled={!ready} onFiles={handleFiles} />
                 <span className="text-base leading-none">＋</span> 加入發票
               </label>
+              {/* 手動模式：有還沒辨識的才出現 */}
+              {idleCount > 0 && (
+                <button
+                  type="button"
+                  onClick={onStart}
+                  disabled={!ready}
+                  className="rounded-xl border border-brand bg-brand-soft px-4 py-2 text-sm font-medium text-brand transition hover:bg-white disabled:opacity-50"
+                >
+                  開始辨識 {idleCount} 張
+                </button>
+              )}
 
               <p className="flex flex-wrap gap-x-3 text-sm text-slate-500">
                 <span>{items.length} 張</span>
@@ -156,7 +183,13 @@ export default function UploadPage(props: Props) {
           <div className="mx-auto w-full max-w-7xl px-6 py-6">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {items.map((item) => (
-                <InvoiceTile key={item.id} item={item} onOpen={() => setOpenId(item.id)} onRetry={() => onRetry(item)} />
+                <InvoiceTile
+                  key={item.id}
+                  item={item}
+                  onOpen={() => setOpenId(item.id)}
+                  onRetry={() => onRetry(item)}
+                  onRemove={() => onRemove(item.id)}
+                />
               ))}
             </div>
             <p className="mt-8 text-center text-sm text-slate-400">點一張開始審核 · 要加發票可以直接拖進這個畫面</p>
@@ -169,7 +202,9 @@ export default function UploadPage(props: Props) {
         <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-brand/10 p-6 backdrop-blur-[2px]">
           <div className="rounded-3xl border-2 border-dashed border-brand bg-white/95 px-12 py-9 text-center shadow-2xl">
             <p className="text-xl font-semibold text-brand">放開就加入</p>
-            <p className="mt-1 text-sm text-slate-500">會用 {selected?.label} 辨識</p>
+            <p className="mt-1 text-sm text-slate-500">
+              {autoRecognize ? `會用 ${selected?.label} 辨識` : "按「開始辨識」才會送出"}
+            </p>
           </div>
         </div>
       )}

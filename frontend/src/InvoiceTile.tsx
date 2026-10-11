@@ -5,9 +5,10 @@ type Props = {
   item: QueueItem;
   onOpen: () => void; // 點縮圖：進入審核
   onRetry: () => void; // 失敗時按「重試」
+  onRemove: () => void; // 還沒辨識時按 ✕ 移除
 };
 
-export default function InvoiceTile({ item, onOpen, onRetry }: Props) {
+export default function InvoiceTile({ item, onOpen, onRetry, onRemove }: Props) {
   const data = item.data;
   const warnCount = countWarnings(item);
   const busy = item.status === "waiting" || item.status === "running";
@@ -24,7 +25,7 @@ export default function InvoiceTile({ item, onOpen, onRetry }: Props) {
           : "border-slate-200 hover:border-slate-300";
 
   return (
-    <article className={"group overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md " + border}>
+    <article className={"group relative overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md " + border}>
       <button
         type="button"
         onClick={onOpen}
@@ -84,6 +85,19 @@ export default function InvoiceTile({ item, onOpen, onRetry }: Props) {
         </div>
       </button>
 
+      {/* 還沒辨識：左上角的 ✕ 可以移除。放在上面那個按鈕的外面，因為按鈕裡面不能再放按鈕 */}
+      {item.status === "idle" && (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`移除 ${item.file.name}`}
+          title="移除"
+          className="absolute top-2 left-2 flex size-7 items-center justify-center rounded-full bg-white/90 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200 hover:bg-white hover:text-red-600"
+        >
+          ✕
+        </button>
+      )}
+
       {/* 失敗：原因（最多兩行）＋重試 */}
       {item.status === "error" && (
         <div className="flex items-start gap-2 border-t border-red-100 bg-red-50 px-3.5 py-2.5">
@@ -113,11 +127,14 @@ export function InvoiceNumber({ value }: { value: string }) {
   );
 }
 
-// 狀態標籤：等待中 / 辨識中 / 失敗 / 已確認 / 需確認 N 項 / 待確認
+// 狀態標籤：未辨識 / 等待中 / 辨識中 / 失敗 / 已確認 / 需確認 N 項 / 待確認
 export function StatusBadge({ item }: { item: QueueItem }) {
   const base = "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium";
   const warnCount = countWarnings(item);
 
+  if (item.status === "idle") {
+    return <span className={base + " border border-dashed border-slate-300 bg-white text-slate-500"}>未辨識</span>;
+  }
   if (item.status === "waiting") {
     return <span className={base + " bg-slate-100 text-slate-500"}>等待中</span>;
   }

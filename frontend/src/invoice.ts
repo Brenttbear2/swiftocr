@@ -7,7 +7,7 @@ export type QueueItem = {
   file: File;
   previewUrl: string; // 縮圖用的暫時網址（只有圖片才有，PDF 是空字串）
   model: string; // 用哪個模型辨識
-  status: "waiting" | "running" | "done" | "error";
+  status: "idle" | "waiting" | "running" | "done" | "error"; // idle：關掉自動辨識時放進來，還沒按「開始辨識」
   result: OcrResponse | null; // 辨識完成才有；保留 AI 原本的結果，不會被修改
   data: InvoiceData | null; // 目前的欄位值：一開始等於 AI 的結果，人工修改後跟著變
   warnings: RuleWarning[]; // 目前的提醒：人工修改後由後端重新檢查

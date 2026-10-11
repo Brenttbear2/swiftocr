@@ -8,6 +8,17 @@ import WelcomePage from "./WelcomePage";
 
 let nextId = 1; // 佇列項目的流水號，每放進一張就 +1
 
+const AUTO_KEY = "swiftocr.autoRecognize"; // 「放入後自動辨識」存在瀏覽器裡的名稱
+
+// 讀取上次的設定：沒存過、或瀏覽器不讓讀（例如某些無痕視窗），就用預設的「自動」
+function loadAutoRecognize(): boolean {
+  try {
+    return localStorage.getItem(AUTO_KEY) !== "off";
+  } catch {
+    return true;
+  }
+}
+
 export default function App() {
   // ── 狀態 ──
   const [page, setPage] = useState<"welcome" | "upload">("welcome"); // 目前顯示的畫面
@@ -16,6 +27,7 @@ export default function App() {
   const [selectedModel, setSelectedModel] = useState(""); // 選中模型的 id
   const [error, setError] = useState("");
   const [items, setItems] = useState<QueueItem[]>([]); // 放進來的發票（佇列）
+  const [autoRecognize, setAutoRecognize] = useState(loadAutoRecognize); // 放進來就自動辨識嗎
 
   // ── 畫面第一次出現時，向後端要資料（只做一次） ──
   useEffect(() => {
@@ -67,7 +79,14 @@ export default function App() {
     }
   }
 
-  // 使用者放進檔案：先全部加入佇列，再一張一張辨識（避免同時送太多請求被限流）
+  // 依序辨識一批：一張辨識完才送下一張（避免同時送太多請求被限流）
+  async function recognizeInOrder(list: QueueItem[], model: string) {
+    for (const item of list) {
+      await recognize(item.id, item.file, model);
+    }
+  }
+
+  // 使用者放進檔案：先全部加入佇列；自動模式就馬上依序辨識，手動模式等按「開始辨識」
   async function addFiles(files: File[]) {
     const newItems: QueueItem[] = files.map((file) => ({
       id: String(nextId++),
@@ -75,7 +94,7 @@ export default function App() {
       // 圖片做一個瀏覽器內的暫時網址給縮圖用；PDF 瀏覽器不能直接當圖片顯示，留空
       previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
       model: selectedModel,
-      status: "waiting",
+      status: autoRecognize ? "waiting" : "idle",
       result: null,
       data: null,
       warnings: [],
@@ -84,8 +103,32 @@ export default function App() {
       error: "",
     }));
     setItems((prev) => [...prev, ...newItems]);
-    for (const item of newItems) {
-      await recognize(item.id, item.file, item.model);
+    if (autoRecognize) await recognizeInOrder(newItems, selectedModel);
+  }
+
+  // 手動模式按「開始辨識」：還沒辨識的全部排進佇列，用「現在」選的模型依序辨識
+  async function startRecognize() {
+    const idle = items.filter((item) => item.status === "idle");
+    setItems((prev) =>
+      prev.map((item) => (item.status === "idle" ? { ...item, status: "waiting", model: selectedModel } : item)),
+    );
+    await recognizeInOrder(idle, selectedModel);
+  }
+
+  // 移除一張還沒辨識的發票（放錯檔案時用）：先還掉縮圖的暫時網址，再從佇列拿掉
+  function removeItem(id: string) {
+    const item = items.find((it) => it.id === id);
+    if (item) URL.revokeObjectURL(item.previewUrl);
+    setItems((prev) => prev.filter((it) => it.id !== id));
+  }
+
+  // 切換「放入後自動辨識」，並記在瀏覽器裡，下次打開還是同樣的設定
+  function changeAutoRecognize(on: boolean) {
+    setAutoRecognize(on);
+    try {
+      localStorage.setItem(AUTO_KEY, on ? "on" : "off");
+    } catch {
+      // 瀏覽器不讓存（例如某些無痕視窗）：這次照樣能用，只是下次不會記得
     }
   }
 
@@ -170,6 +213,10 @@ export default function App() {
           onSelectModel={setSelectedModel}
           items={items}
           onAddFiles={addFiles}
+          autoRecognize={autoRecognize}
+          onAutoRecognizeChange={changeAutoRecognize}
+          onStart={startRecognize}
+          onRemove={removeItem}
           onRetry={(item) => recognize(item.id, item.file, selectedModel)}
           onClear={clearAll}
           onEditField={editField}

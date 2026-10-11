@@ -1,4 +1,4 @@
-// 模型下拉選單：平常只顯示目前的模型，點開才依廠商列出全部模型與說明
+// 模型下拉選單：平常只顯示目前的模型，點開才依廠商列出全部模型與說明，最下面是「放入後自動辨識」開關
 import { useEffect, useRef, useState } from "react";
 import type { ModelInfo } from "./api";
 
@@ -10,9 +10,11 @@ type Props = {
   models: ModelInfo[];
   selectedModel: string;
   onSelect: (id: string) => void; // 使用者選了某個模型時呼叫
+  autoRecognize: boolean; // 放進來就自動辨識嗎
+  onAutoRecognizeChange: (on: boolean) => void; // 切換自動辨識
 };
 
-export default function ModelPicker({ models, selectedModel, onSelect }: Props) {
+export default function ModelPicker({ models, selectedModel, onSelect, autoRecognize, onAutoRecognizeChange }: Props) {
   const [open, setOpen] = useState(false); // 選單是否打開
   const boxRef = useRef<HTMLDivElement>(null); // 指向整個元件，用來判斷「點在外面」
 
@@ -91,6 +93,30 @@ export default function ModelPicker({ models, selectedModel, onSelect }: Props) 
                 ))}
             </div>
           ))}
+
+          {/* 開關：role="switch" 讓螢幕閱讀器知道這是開關，aria-checked 是開或關 */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoRecognize}
+            onClick={() => onAutoRecognizeChange(!autoRecognize)}
+            className="mt-1 flex w-full items-center gap-3 rounded-lg border-t border-slate-100 px-2.5 pt-3 pb-2 text-left focus-visible:bg-slate-50 focus-visible:outline-none"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-medium text-slate-800">放入後自動辨識</span>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                {autoRecognize ? "放進來就開始辨識" : "要按「開始辨識」才會送出"}
+              </span>
+            </span>
+            {/* 開關的外觀：底色是軌道，白點開的時候往右移 */}
+            <span className={"relative h-5 w-9 shrink-0 rounded-full transition " + (autoRecognize ? "bg-brand" : "bg-slate-300")}>
+              <span
+                className={
+                  "absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition " + (autoRecognize ? "translate-x-4" : "")
+                }
+              />
+            </span>
+          </button>
         </div>
       )}
     </div>

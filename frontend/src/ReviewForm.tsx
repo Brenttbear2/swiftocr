@@ -73,6 +73,13 @@ export default function ReviewForm({ item, modelLabel, onEdit, onRecheck, onConf
           {item.file.name} · {modelLabel} · {Math.ceil(item.file.size / 1024)} KB
         </p>
 
+        {/* 還沒開始（手動模式）：提醒要回總覽按「開始辨識」 */}
+        {item.status === "idle" && (
+          <p className="mt-6 rounded-lg bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-600">
+            還沒開始辨識。回總覽按工具列的「開始辨識」，就會用當時選的模型送出。
+          </p>
+        )}
+
         {/* 還沒辨識完 */}
         {(item.status === "waiting" || item.status === "running") && (
           <div className="mt-6 space-y-3">
