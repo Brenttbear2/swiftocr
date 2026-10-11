@@ -47,6 +47,7 @@ export type OcrMeta = {
   prompt_tokens: number | null;
   completion_tokens: number | null;
   cost_usd: number | null;
+  page_image: string | null; // PDF 轉成的第 1 頁圖片（data URL），圖片檔是 null
 };
 
 /** POST /api/ocr 的回應（對應 schemas.py 的 OcrResponse） */
@@ -54,6 +55,12 @@ export type OcrResponse = {
   data: InvoiceData;
   warnings: RuleWarning[];
   meta: OcrMeta;
+};
+
+/** POST /api/check 的回應（對應 schemas.py 的 CheckResponse） */
+export type CheckResponse = {
+  data: InvoiceData;
+  warnings: RuleWarning[];
 };
 
 /** 向後端發請求，回傳解析好的 JSON；失敗時丟出帶中文訊息的錯誤 */
@@ -86,4 +93,14 @@ export function recognizeInvoice(file: File, model: string): Promise<OcrResponse
   form.append("file", file);
   form.append("model", model);
   return requestJson<OcrResponse>("/api/ocr", { method: "POST", body: form });
+}
+
+/** 人工修改欄位後，請後端用同一套規則重新檢查（POST /api/check） */
+export function checkInvoice(data: InvoiceData): Promise<CheckResponse> {
+  // 這次送的是 JSON（不是檔案），所以要說明內容格式，並把物件轉成文字
+  return requestJson<CheckResponse>("/api/check", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 }

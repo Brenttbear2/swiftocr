@@ -1,7 +1,7 @@
 // 總指揮：保管各畫面共用的資料（狀態），並決定現在要顯示哪一個畫面
 import { useEffect, useState } from "react";
-import { getHealth, getModels, recognizeInvoice, type HealthStatus, type ModelInfo } from "./api";
-import type { QueueItem } from "./invoice";
+import { checkInvoice, getHealth, getModels, recognizeInvoice, type HealthStatus, type InvoiceData, type ModelInfo } from "./api";
+import { mergeWarnings, type FieldKey, type QueueItem } from "./invoice";
 import UploadPage from "./UploadPage";
 import WelcomePage from "./WelcomePage";
 
@@ -43,10 +43,11 @@ export default function App() {
 
   // 辨識一張：標成「辨識中」→ 呼叫後端 → 依結果標成「完成」或「失敗」
   async function recognize(id: string, file: File, model: string) {
-    updateItem(id, { status: "running", model, error: "" });
+    updateItem(id, { status: "running", model, error: "", confirmed: false });
     try {
       const result = await recognizeInvoice(file, model);
-      updateItem(id, { status: "done", result });
+      // 目前的欄位與提醒，一開始就是 AI 的結果；result 本身另外留著，之後比對「改了哪些」
+      updateItem(id, { status: "done", result, data: result.data, warnings: result.warnings });
     } catch (err) {
       updateItem(id, { status: "error", error: (err as Error).message });
     }
@@ -62,12 +63,49 @@ export default function App() {
       model: selectedModel,
       status: "waiting",
       result: null,
+      data: null,
+      warnings: [],
+      confirmed: false,
       error: "",
     }));
     setItems((prev) => [...prev, ...newItems]);
     for (const item of newItems) {
       await recognize(item.id, item.file, item.model);
     }
+  }
+
+  // ── 審核的操作 ──
+
+  // 使用者改了一個欄位：只改畫面上的值，還不檢查（打字打到一半不用檢查）
+  function editField(id: string, key: FieldKey, value: InvoiceData[FieldKey]) {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id && item.data ? { ...item, data: { ...item.data, [key]: value } } : item)),
+    );
+  }
+
+  // 改完一個欄位（離開輸入框或選了選項）：請後端用同一套規則重新檢查
+  async function recheck(id: string, sent: InvoiceData) {
+    try {
+      const checked = await checkInvoice(sent);
+      setItems((prev) =>
+        prev.map((item) => {
+          if (item.id !== id || !item.data) return item;
+          // 等檢查結果的這段時間，使用者可能又改了別的欄位：那些欄位保留使用者的新值
+          let data = checked.data;
+          for (const key of Object.keys(data) as FieldKey[]) {
+            if (item.data[key] !== sent[key]) data = { ...data, [key]: item.data[key] };
+          }
+          return { ...item, data, warnings: mergeWarnings(item, data, checked.warnings) };
+        }),
+      );
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  // 按「確認」或「取消確認」
+  function setConfirmed(id: string, confirmed: boolean) {
+    updateItem(id, { confirmed });
   }
 
   // 清除全部：先把縮圖的暫時網址還給瀏覽器（釋放記憶體），再清空佇列
@@ -108,6 +146,9 @@ export default function App() {
           onAddFiles={addFiles}
           onRetry={(item) => recognize(item.id, item.file, selectedModel)}
           onClear={clearAll}
+          onEditField={editField}
+          onRecheck={recheck}
+          onConfirm={setConfirmed}
         />
       )}
 

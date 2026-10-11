@@ -55,6 +55,7 @@ class OcrMeta(BaseModel):
     prompt_tokens: int | None = Field(None, description="送給 AI 的 token 數（含圖片）")
     completion_tokens: int | None = Field(None, description="AI 回答的 token 數")
     cost_usd: float | None = Field(None, description="這次呼叫的費用（美元），由 OpenRouter 提供")
+    page_image: str | None = Field(None, description="PDF 轉成的第 1 頁圖片（data URL），審核時顯示用；圖片檔為 null")
 
 
 class OcrResponse(BaseModel):
@@ -63,6 +64,13 @@ class OcrResponse(BaseModel):
     data: InvoiceData
     warnings: list[RuleWarning]
     meta: OcrMeta
+
+
+class CheckResponse(BaseModel):
+    """POST /api/check 的回應：重新檢查後的欄位與提醒。"""
+
+    data: InvoiceData
+    warnings: list[RuleWarning]
 
 
 class ModelInfo(BaseModel):

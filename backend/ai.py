@@ -38,6 +38,7 @@ class AIResult:
     raw: dict                       # AI 回傳的 JSON（尚未經過規則檢查）
     source_kind: str                # 上傳檔案的實際格式："pdf" / "png" / "jpeg"
     page_count: int                 # PDF 的總頁數（圖片固定為 1）
+    page_image: str | None          # PDF 轉成的第 1 頁圖片（data URL），讓前端審核時顯示；圖片檔是 None
     prompt_tokens: int | None
     completion_tokens: int | None
     cost_usd: float | None
@@ -192,6 +193,7 @@ async def recognize_invoice(content: bytes, model: str) -> AIResult:
         raw=raw,
         source_kind=source_kind,
         page_count=page_count,
+        page_image=data_url if source_kind == "pdf" else None,   # 圖片檔前端本來就有，不用再傳回去
         prompt_tokens=usage.prompt_tokens if usage else None,
         completion_tokens=usage.completion_tokens if usage else None,
         cost_usd=getattr(usage, "cost", None),   # OpenRouter 額外提供的欄位，不一定存在

@@ -1,25 +1,27 @@
-// 縮圖磚：一張發票的原圖縮圖、號碼、總計與狀態；點一下看完整欄位
-import { InvoiceNumber, StatusBadge } from "./ResultCard";
-import { countWarnings, displayValue, type QueueItem } from "./invoice";
+// 縮圖磚：一張發票的原圖縮圖、號碼、總計與狀態；點一下進入審核
+import { countWarnings, displayValue, imageUrl, type QueueItem } from "./invoice";
 
 type Props = {
   item: QueueItem;
-  onOpen: () => void; // 點縮圖：打開完整結果
+  onOpen: () => void; // 點縮圖：進入審核
   onRetry: () => void; // 失敗時按「重試」
 };
 
 export default function InvoiceTile({ item, onOpen, onRetry }: Props) {
-  const data = item.result?.data;
+  const data = item.data;
   const warnCount = countWarnings(item);
   const busy = item.status === "waiting" || item.status === "running";
+  const image = imageUrl(item);
 
-  // 外框顏色跟著狀態：需確認是黃、失敗是紅，其他是灰
+  // 外框顏色跟著狀態：已確認是綠、需確認是黃、失敗是紅，其他是灰
   const border =
     item.status === "error"
       ? "border-red-200"
-      : warnCount > 0
-        ? "border-amber-300"
-        : "border-slate-200 hover:border-slate-300";
+      : item.confirmed
+        ? "border-emerald-300"
+        : warnCount > 0
+          ? "border-amber-300"
+          : "border-slate-200 hover:border-slate-300";
 
   return (
     <article className={"group overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md " + border}>
@@ -28,11 +30,11 @@ export default function InvoiceTile({ item, onOpen, onRetry }: Props) {
         onClick={onOpen}
         className="block w-full text-left focus-visible:ring-4 focus-visible:ring-brand/30 focus-visible:outline-none focus-visible:ring-inset"
       >
-        {/* 縮圖：圖片顯示原圖上半部（號碼通常在上面），PDF 顯示圖示 */}
+        {/* 縮圖：顯示原圖上半部（號碼通常在上面）；PDF 辨識完成前只能顯示圖示 */}
         <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
-          {item.previewUrl ? (
+          {image ? (
             <img
-              src={item.previewUrl}
+              src={image}
               alt=""
               className="size-full object-cover object-top transition duration-300 group-hover:scale-[1.03]"
             />
@@ -53,11 +55,11 @@ export default function InvoiceTile({ item, onOpen, onRetry }: Props) {
           )}
 
           <div className="absolute top-2 right-2 shadow-sm">
-            <StatusBadge item={item} warnCount={warnCount} />
+            <StatusBadge item={item} />
           </div>
         </div>
 
-        {/* 文字：完成後顯示號碼、日期、總計；之前顯示檔名 */}
+        {/* 文字：完成後顯示號碼、日期、總計（人工改過就是改過的值）；之前顯示檔名 */}
         <div className="px-3.5 py-3">
           {data ? (
             <>
@@ -97,4 +99,48 @@ export default function InvoiceTile({ item, onOpen, onRetry }: Props) {
       )}
     </article>
   );
+}
+
+// 發票號碼拆成「字軌（2 個英文字母）＋ 8 碼數字」，格式不符就原樣顯示
+export function InvoiceNumber({ value }: { value: string }) {
+  const match = /^([A-Z]{2})(\d{8})$/.exec(value);
+  if (!match) return <>{value}</>;
+  return (
+    <>
+      <span className="mr-1 rounded bg-slate-900 px-1 py-px text-[0.8em] text-white">{match[1]}</span>
+      {match[2]}
+    </>
+  );
+}
+
+// 狀態標籤：等待中 / 辨識中 / 失敗 / 已確認 / 需確認 N 項 / 待確認
+export function StatusBadge({ item }: { item: QueueItem }) {
+  const base = "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium";
+  const warnCount = countWarnings(item);
+
+  if (item.status === "waiting") {
+    return <span className={base + " bg-slate-100 text-slate-500"}>等待中</span>;
+  }
+  if (item.status === "running") {
+    return (
+      <span className={base + " bg-brand-soft text-brand"}>
+        {/* 轉圈圈：animate-spin 讓它一直旋轉 */}
+        <svg viewBox="0 0 24 24" fill="none" className="size-3.5 animate-spin">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+          <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+        辨識中…
+      </span>
+    );
+  }
+  if (item.status === "error") {
+    return <span className={base + " bg-red-50 text-red-700"}>失敗</span>;
+  }
+  if (item.confirmed) {
+    return <span className={base + " bg-emerald-600 text-white"}>✓ 已確認</span>;
+  }
+  if (warnCount > 0) {
+    return <span className={base + " bg-amber-50 text-amber-800"}>需確認 {warnCount} 項</span>;
+  }
+  return <span className={base + " bg-white text-slate-600 ring-1 ring-slate-200"}>待確認</span>;
 }

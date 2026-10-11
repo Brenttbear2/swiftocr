@@ -1,10 +1,10 @@
-// 上傳畫面：還沒有發票時是一個大投放區；放入後變成「上方工具列＋發票縮圖磚牆」
-import { useEffect, useState } from "react";
-import type { ModelInfo } from "./api";
+// 上傳畫面：還沒有發票時是一個大投放區；放入後變成「上方工具列＋發票縮圖磚牆」，點一張進入審核
+import { useState } from "react";
+import type { InvoiceData, ModelInfo } from "./api";
 import InvoiceTile from "./InvoiceTile";
 import ModelPicker from "./ModelPicker";
-import ResultCard from "./ResultCard";
-import { countWarnings, type QueueItem } from "./invoice";
+import ReviewPage from "./ReviewPage";
+import { countWarnings, type FieldKey, type QueueItem } from "./invoice";
 
 type Props = {
   models: ModelInfo[];
@@ -14,32 +14,27 @@ type Props = {
   onAddFiles: (files: File[]) => void; // 使用者放進檔案時呼叫
   onRetry: (item: QueueItem) => void; // 使用者按「重試」時呼叫
   onClear: () => void; // 使用者按「清除全部」時呼叫
+  onEditField: (id: string, key: FieldKey, value: InvoiceData[FieldKey]) => void; // 審核時改了一個欄位
+  onRecheck: (id: string, data: InvoiceData) => void; // 改完了，請後端重新檢查
+  onConfirm: (id: string, confirmed: boolean) => void; // 確認／取消確認
 };
 
 export default function UploadPage(props: Props) {
   const { models, selectedModel, onSelectModel, items, onAddFiles, onRetry, onClear } = props;
+  const { onEditField, onRecheck, onConfirm } = props;
   const [dragging, setDragging] = useState(false); // 是否有檔案正被拖進畫面
-  const [openId, setOpenId] = useState<string | null>(null); // 正在看完整結果的那一張
+  const [openId, setOpenId] = useState<string | null>(null); // 正在審核的那一張（null = 在總覽）
 
   const ready = selectedModel !== ""; // 模型清單載入後才能上傳
   const selected = models.find((m) => m.id === selectedModel);
-  const openItem = items.find((it) => it.id === openId);
 
-  // 工具列上的統計
-  const doneCount = items.filter((it) => it.status === "done").length;
-  const checkCount = items.filter((it) => countWarnings(it) > 0).length;
+  // 工具列上的統計：每張只會算進其中一種
+  const done = items.filter((it) => it.status === "done");
+  const confirmedCount = done.filter((it) => it.confirmed).length;
+  const checkCount = done.filter((it) => !it.confirmed && countWarnings(it) > 0).length;
+  const todoCount = done.length - confirmedCount - checkCount; // 沒有疑問、等你看一眼
   const errorCount = items.filter((it) => it.status === "error").length;
-  const pendingCount = items.length - doneCount - errorCount;
-
-  // 完整結果打開時，按 Esc 關閉
-  useEffect(() => {
-    if (openId === null) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpenId(null);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [openId]);
+  const pendingCount = items.length - done.length - errorCount;
 
   // 把瀏覽器給的檔案清單（FileList）轉成一般陣列，交給 App
   function handleFiles(list: FileList | null) {
@@ -129,8 +124,9 @@ export default function UploadPage(props: Props) {
               <p className="flex flex-wrap gap-x-3 text-sm text-slate-500">
                 <span>{items.length} 張</span>
                 {pendingCount > 0 && <span className="text-brand">處理中 {pendingCount}</span>}
-                {doneCount - checkCount > 0 && <span className="text-emerald-700">完成 {doneCount - checkCount}</span>}
                 {checkCount > 0 && <span className="text-amber-700">需確認 {checkCount}</span>}
+                {todoCount > 0 && <span className="text-slate-700">待確認 {todoCount}</span>}
+                {confirmedCount > 0 && <span className="text-emerald-700">已確認 {confirmedCount}</span>}
                 {errorCount > 0 && <span className="text-red-700">失敗 {errorCount}</span>}
               </p>
 
@@ -151,7 +147,7 @@ export default function UploadPage(props: Props) {
                 <InvoiceTile key={item.id} item={item} onOpen={() => setOpenId(item.id)} onRetry={() => onRetry(item)} />
               ))}
             </div>
-            <p className="mt-8 text-center text-sm text-slate-400">點一張看完整欄位 · 要加發票可以直接拖進這個畫面</p>
+            <p className="mt-8 text-center text-sm text-slate-400">點一張開始審核 · 要加發票可以直接拖進這個畫面</p>
           </div>
         </>
       )}
@@ -166,30 +162,19 @@ export default function UploadPage(props: Props) {
         </div>
       )}
 
-      {/* 完整結果：點縮圖後蓋在畫面上；點旁邊的暗色區域或按 Esc 關閉 */}
-      {openItem && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setOpenId(null); // 點的是暗色背景本身才關閉
-          }}
-          className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 p-4 backdrop-blur-sm sm:p-10"
-        >
-          <div className="mx-auto max-w-3xl">
-            <div className="mb-2 flex justify-end">
-              <button
-                type="button"
-                autoFocus
-                onClick={() => setOpenId(null)}
-                className="rounded-lg bg-white/90 px-3 py-1.5 text-sm text-slate-600 shadow-sm hover:bg-white focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none"
-              >
-                關閉（Esc）
-              </button>
-            </div>
-            <ResultCard item={openItem} modelLabel={modelLabel(openItem.model)} onRetry={() => onRetry(openItem)} />
-          </div>
-        </div>
+      {/* 審核畫面：點縮圖後蓋滿整個視窗；按「回總覽」或 Esc 回到這裡 */}
+      {openId !== null && (
+        <ReviewPage
+          items={items}
+          currentId={openId}
+          modelLabel={modelLabel}
+          onSelect={setOpenId}
+          onClose={() => setOpenId(null)}
+          onEditField={onEditField}
+          onRecheck={onRecheck}
+          onConfirm={onConfirm}
+          onRetry={onRetry}
+        />
       )}
     </main>
   );

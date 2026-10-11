@@ -1,7 +1,9 @@
-"""程式入口：建立網站、定義 3 個 API、掛上前端網頁。
+"""程式入口：建立網站、定義 4 個 API、掛上前端網頁。
 
 一個辨識請求的路線：
     POST /api/ocr → ai.py 轉檔並呼叫 AI → rules.py 驗算業務規則 → 回傳結果
+人工修改欄位後：
+    POST /api/check → rules.py 用同一套規則重新驗算 → 回傳結果
 
 啟動方式（在專案根目錄）：
     .venv\\Scripts\\python.exe -m uvicorn main:app --app-dir backend --reload
@@ -17,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 import config
 from ai import OcrError, recognize_invoice
 from rules import apply_rules
-from schemas import HealthStatus, ModelInfo, OcrMeta, OcrResponse, RuleWarning
+from schemas import CheckResponse, HealthStatus, InvoiceData, ModelInfo, OcrMeta, OcrResponse, RuleWarning
 
 app = FastAPI(
     title="發票 OCR 辨識 API",
@@ -83,8 +85,21 @@ async def ocr_invoice(
             prompt_tokens=result.prompt_tokens,
             completion_tokens=result.completion_tokens,
             cost_usd=result.cost_usd,
+            page_image=result.page_image,
         ),
     )
+
+
+# ════════════════════════ API 4：重新檢查人工修改後的欄位 ════════════════════════
+
+@app.post("/api/check", response_model=CheckResponse, summary="重新檢查修改後的欄位", tags=["發票辨識"])
+def check_invoice(data: InvoiceData) -> CheckResponse:
+    """審核時使用者改了欄位，用和辨識時同一套 rules.py 重新驗算。
+
+    規則只寫在後端一個地方，前端不另外寫一份，兩邊才不會不一致。
+    """
+    checked, warnings = apply_rules(data.model_dump())
+    return CheckResponse(data=checked, warnings=warnings)
 
 
 # ════════════════════════ 把 FastAPI 預設的英文格式錯誤改成中文 ════════════════════════
