@@ -36,7 +36,7 @@ export default function App() {
         const [healthResult, modelList] = await Promise.all([getHealth(), getModels()]);
         setHealth(healthResult);
         setModels(modelList);
-        setSelectedModel(modelList[0]?.id ?? "");
+        setSelectedModel((modelList.find((m) => m.is_default) ?? modelList[0])?.id ?? ""); // 預設模型由後端決定
       } catch (err) {
         setError((err as Error).message);
       }

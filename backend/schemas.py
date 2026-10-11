@@ -80,6 +80,7 @@ class ModelInfo(BaseModel):
     label: str
     category: Literal["openai", "google"]
     note: str
+    is_default: bool  # 是不是預設模型（config.DEFAULT_MODEL），前端一進來就選它
 
 
 class HealthStatus(BaseModel):

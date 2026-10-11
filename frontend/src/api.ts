@@ -12,6 +12,7 @@ export type ModelInfo = {
   label: string;
   category: "openai" | "google";
   note: string;
+  is_default: boolean; // 後端 config.py 的 DEFAULT_MODEL
 };
 
 /** 本案支援的三種發票類型（對應 schemas.py 的 InvoiceType） */

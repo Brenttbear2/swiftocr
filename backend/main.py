@@ -40,7 +40,7 @@ def health() -> HealthStatus:
 
 @app.get("/api/models", response_model=list[ModelInfo], summary="可選的辨識模型清單", tags=["模型"])
 def list_models() -> list[dict]:
-    return config.MODELS
+    return [{**m, "is_default": m["id"] == config.DEFAULT_MODEL} for m in config.MODELS]
 
 
 # ════════════════════════ API 3：辨識發票 ════════════════════════

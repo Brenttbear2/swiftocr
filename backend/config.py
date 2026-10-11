@@ -33,7 +33,7 @@ MODELS = [
     {"id": "google/gemini-3.5-flash",       "label": "Gemini 3.5 Flash",       "category": "google", "note": "Google 高速推論"},
     {"id": "google/gemini-3.1-flash-lite",  "label": "Gemini 3.1 Flash Lite",  "category": "google", "note": "Google 最輕量 · 成本最低"},
 ]
-DEFAULT_MODEL = "openai/gpt-4o"
+DEFAULT_MODEL = "google/gemini-3.1-flash-lite"
 
 # 模型白名單：只接受清單內的模型，避免被指定昂貴或不相關的模型
 ALLOWED_MODEL_IDS = {m["id"] for m in MODELS}
