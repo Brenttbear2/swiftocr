@@ -1,0 +1,2 @@
+# Windows 批次檔一律用 CRLF 換行，否則 cmd 可能讀錯（例如 goto 找不到標籤）
+*.bat text eol=crlf
