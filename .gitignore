@@ -9,8 +9,10 @@ __pycache__/
 node_modules/
 dist/
 
-# 環境變數（含 API Key，絕對不能上傳）
+# 環境變數（含 API Key，絕對不能上傳）；.env.local、.env.production 這類也一起排除，只有範本可以進版控
 .env
+.env.*
+!.env.example
 
 # 編輯器雜檔
 .vscode/

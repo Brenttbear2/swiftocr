@@ -86,14 +86,14 @@ function editDetail(item: QueueItem): string {
     .join("；");
 }
 
-// CSV 的一格：有逗號、引號或換行的，要用引號包起來，裡面的引號寫成兩個
+// CSV 的一格：文字開頭是 = + - @ 的先加 '，免得 Excel 當成公式執行（CSV 注入）；有逗號、引號或換行的用引號包起來，裡面的引號寫成兩個
 function csvCell(value: unknown): string {
   if (value === null || value === undefined) return "";
-  const text = String(value);
+  const text = typeof value === "string" && /^[=+\-@\t\r]/.test(value) ? "'" + value : String(value);
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-// 統編那一格：Excel 會把開頭的 0 吃掉（04595257 → 4595257），寫成 ="04595257" 讓 Excel 當成文字
+// 統編那一格：Excel 會把開頭的 0 吃掉（01234567 → 1234567），寫成 ="01234567" 讓 Excel 當成文字
 function taxnoCell(value: unknown): string {
   return typeof value === "string" && /^\d+$/.test(value) ? `="${value}"` : csvCell(value);
 }

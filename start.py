@@ -122,12 +122,13 @@ def main() -> None:
     if need_install or need_build:
         npm = shutil.which("npm")
         if npm is None:
-            stop("找不到 Node.js。請先安裝 Node.js 20 以上：https://nodejs.org/")
+            stop("找不到 Node.js。請先安裝 Node.js 22 以上：https://nodejs.org/")
         if need_install:
             print("[準備 2/2] 安裝前端套件（約 1 分鐘）")
             if not run([npm, "ci", "--no-audit", "--no-fund"], cwd=frontend):
                 stop("前端套件安裝失敗，請確認網路連線後再執行一次。")
-        print("[準備 2/2] 前端程式有更新，重新打包網頁")
+        built = (frontend / "dist" / "index.html").exists()
+        print("[準備 2/2] 前端程式有更新，重新打包網頁" if built else "[準備 2/2] 打包網頁")
         if not run([npm, "run", "build"], cwd=frontend):
             stop("前端打包失敗，請看上面的錯誤訊息（通常是程式裡有型別錯誤）。")
 
