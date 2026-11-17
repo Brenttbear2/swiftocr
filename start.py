@@ -1,6 +1,6 @@
 """SwiftOCR 啟動腳本：第一次執行會自動準備好環境，之後執行就直接啟動。
 
-Windows：雙擊 start.bat（它會呼叫這個檔案）
+Windows：在專案根目錄執行 python start.py，或雙擊 start.bat（它會呼叫這個檔案）
 Mac / Linux：在專案根目錄執行 python3 start.py
 """
 

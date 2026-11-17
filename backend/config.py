@@ -18,8 +18,8 @@ load_dotenv(PROJECT_ROOT / ".env")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")  # 沒設定時為 None
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_HEADERS = {
-    "HTTP-Referer": "https://invoice-ocr-poc.local",
-    "X-Title": "Invoice OCR",
+    "HTTP-Referer": "https://github.com/Brenttbear2/swiftocr",
+    "X-Title": "SwiftOCR",
 }
 
 # ── 可選模型清單（OpenRouter model ID），依廠商分組 ──

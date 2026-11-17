@@ -1,6 +1,6 @@
 # SwiftOCR：台灣統一發票辨識系統
 
-上傳發票、單據，由AI OCR 解析發票號碼、日期、統編、金額。程式檢查相關稅務規則，並經人工確認、匯出成 CSV或JSON檔案。
+上傳發票、單據，由 AI OCR 解析發票號碼、日期、統編、金額。程式檢查相關稅務規則，並經人工確認、匯出成 CSV 或 JSON 檔案。
 
 <!-- 截圖：docs/images/upload.png（縮圖磚牆） -->
 
@@ -13,7 +13,7 @@
 ```
 
 - **多張上傳**：圖片（JPG、PNG）或 PDF 都可以，系統一張一張辨識
-- **目前開放6 項AI 模型選擇**：OpenAI（GPT-4o、GPT-4o Mini、GPT-5 Mini）、Google（Gemini 3.1 Pro Preview、Gemini 3.5 Flash、Gemini 3.1 Flash Lite），預設是最便宜、最快的 Flash Lite
+- **可選 6 個 AI 模型**：OpenAI（GPT-4o、GPT-4o Mini、GPT-5 Mini）、Google（Gemini 3.1 Pro Preview、Gemini 3.5 Flash、Gemini 3.1 Flash Lite），預設是最便宜、最快的 Flash Lite
 - **規則檢查**：統編檢查碼、金額加總、5% 稅額、日期，可疑的欄位會標黃色
 - **審核介面**：左邊看原圖、右邊改欄位，按 Enter 確認並跳下一張
 - **準確率統計**：系統記下你改了哪些欄位，算出每個模型的準確率
@@ -89,7 +89,7 @@ OPENROUTER_API_KEY=sk-or-v1-你的key
 SwiftOCR 啟動中：http://127.0.0.1:8000
 ```
 
-接著**瀏覽器會自動啟動**，即可進入Swift OCR 首頁
+接著**瀏覽器會自動打開**，就會看到 SwiftOCR 的工作畫面
 
 - 使用時，那個黑色（或終端機）視窗**不要關**
 - 要結束時，在視窗按 `Ctrl + C`，或直接關掉視窗

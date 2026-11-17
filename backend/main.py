@@ -22,7 +22,7 @@ from rules import apply_rules
 from schemas import CheckResponse, HealthStatus, InvoiceData, ModelInfo, OcrMeta, OcrResponse, RuleWarning
 
 app = FastAPI(
-    title="發票 OCR 辨識 API",
+    title="SwiftOCR API",
     version="2.0.0",
     description="上傳台灣統一發票圖片或 PDF，由 Vision LLM 辨識為結構化資料，並以業務規則驗算。",
 )
@@ -32,7 +32,7 @@ app = FastAPI(
 
 @app.get("/api/health", response_model=HealthStatus, summary="服務狀態檢查", tags=["系統"])
 def health() -> HealthStatus:
-    """雲端平台會定期呼叫這個網址，確認服務還活著。"""
+    """前端一打開就會呼叫這個網址，確認後端活著、API key 有沒有設定。"""
     return HealthStatus(status="ok", api_key_configured=bool(config.OPENROUTER_API_KEY))
 
 
