@@ -161,7 +161,7 @@ function Dropdown({ label, closeOnClick, children }: DropdownProps) {
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white py-2 pr-2 pl-3 text-sm text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none"
+        className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white py-2 pr-2 pl-3 text-sm text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none"
       >
         {label}
         <svg viewBox="0 0 20 20" fill="none" className={"size-4 text-slate-400 transition " + (open ? "rotate-180" : "")}>
@@ -173,7 +173,7 @@ function Dropdown({ label, closeOnClick, children }: DropdownProps) {
         // 靠右對齊：按鈕在工具列右邊，選單往左打開才不會超出畫面
         <div
           onClick={closeOnClick ? () => setOpen(false) : undefined}
-          className="absolute top-full right-4 z-30 mt-2 sm:right-0 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
+          className="absolute top-full right-4 z-30 mt-2 sm:right-0 rounded-lg border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
         >
           {children}
         </div>

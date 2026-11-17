@@ -186,7 +186,7 @@ function ImageViewer({ item, stamped }: { item: QueueItem; stamped: boolean }) {
       {/* 確認時蓋上的印章：從大到小「蓋」下去（動畫定義在 index.css 的 stamp） */}
       {stamped && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-emerald-950/25">
-          <p className="animate-stamp rounded-2xl border-4 border-emerald-500 bg-white/95 px-8 py-3 text-3xl font-bold tracking-widest text-emerald-600 shadow-2xl">
+          <p className="animate-stamp rounded-lg border-4 border-emerald-500 bg-white/95 px-8 py-3 text-3xl font-bold tracking-widest text-emerald-600 shadow-2xl">
             ✓ 已確認
           </p>
         </div>

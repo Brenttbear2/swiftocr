@@ -50,7 +50,7 @@ git clone https://github.com/Brenttbear2/swiftocr.git
 cd swiftocr
 ```
 
-### 步驟 2：啟動
+### 步驟 2：第一次啟動（自動安裝環境）
 
 **Windows**：在檔案總管打開 `swiftocr` 資料夾，**雙擊 `start.bat`**。
 
@@ -88,7 +88,28 @@ SwiftOCR 啟動中：http://127.0.0.1:8000
 
 - 使用時，那個黑色（或終端機）視窗**不要關**
 - 要結束時，在視窗按 `Ctrl + C`，或直接關掉視窗
-- **之後每次使用，只要做步驟 2**，不會再安裝一次
+
+### 之後每次使用
+
+環境裝好之後，直接執行 Python 主程式：
+
+```bash
+# 1. 啟用虛擬環境（每開一個新的終端機要做一次）
+.venv\Scripts\activate          # Windows
+source .venv/bin/activate       # Mac／Linux
+
+# 2. 啟動
+python backend/main.py
+```
+
+看到 `Uvicorn running on http://127.0.0.1:8000`，按住 `Ctrl` 點這個網址（或複製到瀏覽器）就能使用。
+
+> Windows PowerShell 啟用虛擬環境時，如果出現「已停用指令碼執行」，可以不啟用，直接執行 `.venv\Scripts\python backend\main.py`。
+
+- **用 VS Code**：打開 `backend/main.py`，按右上角的 ▶ 就能啟動。按 `F5` 則是除錯模式，可以設中斷點。
+  - 右下角的 Python 版本要選 `.venv`。
+- **改了前端程式**：先在 `frontend` 資料夾執行 `npm run build`，再啟動。
+  - 也可以改雙擊 `start.bat`，它發現前端改過會自動重新打包。
 
 <details>
 <summary>不想用啟動腳本？手動執行的步驟</summary>
@@ -117,7 +138,7 @@ npm run build
 cd ..
 
 # 6. 啟動，然後用瀏覽器打開 http://127.0.0.1:8000
-python -m uvicorn main:app --app-dir backend --port 8000
+python backend/main.py
 ```
 
 </details>
@@ -128,16 +149,15 @@ python -m uvicorn main:app --app-dir backend --port 8000
 
 <!-- 截圖：docs/images/review.png（審核畫面） -->
 
-1. 首頁按「**上傳發票 →**」
-2. （可選）點工具列的模型按鈕，換一個 AI 模型
-3. **把發票手動拖入畫面**（或按「加入發票」選檔案），系統會一張一張辨識
-4. 看縮圖上的標籤：
+1. （可選）點工具列的模型按鈕，換一個 AI 模型
+2. **把發票拖進畫面**（或按「加入發票」選檔案），系統會一張一張辨識。投放區畫了支援的三種發票，可以先比對手上的是不是
+3. 看縮圖上的標籤：
    - 🟡 **需確認 N 項**：有欄位沒通過規則檢查，要特別看
    - ⚪ **待確認**：都通過了，看一眼就好
    - 🔴 **失敗**：可以換模型重試
-5. **點一張縮圖**，進入審核畫面：左邊是原圖（點圖可放大），右邊是 AI 讀出的欄位，有錯就直接改
-6. 按「**確認，下一張**」（或按 `Enter`），會自動跳到下一張
-7. 全部確認完，按工具列的「**匯出**」，下載 CSV（Excel 可直接開）或 JSON
+4. **點一張縮圖**，進入審核畫面：左邊是原圖（點圖可放大），右邊是 AI 讀出的欄位，有錯就直接改
+5. 按「**確認，下一張**」（或按 `Enter`），會自動跳到下一張
+6. 全部確認完，按工具列的「**匯出**」，下載 CSV（Excel 可直接開）或 JSON
 
 **審核畫面的快捷鍵**
 

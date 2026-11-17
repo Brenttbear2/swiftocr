@@ -139,7 +139,7 @@ export default function ReviewForm({ item, modelLabel, onEdit, onRecheck, onConf
             </div>
 
             {/* 金額：像收據底部一樣靠右 */}
-            <div className="mt-6 space-y-3 rounded-xl bg-slate-50 px-4 py-4">
+            <div className="mt-6 space-y-3 rounded-lg bg-slate-50 px-4 py-4">
               <Field name="sales" amount readOnly={isDual} {...shared} />
               <Field name="tax" amount readOnly={isDual} {...shared} />
               <div className="border-t border-dashed border-slate-300" />
@@ -172,7 +172,7 @@ export default function ReviewForm({ item, modelLabel, onEdit, onRecheck, onConf
             <button
               type="button"
               onClick={onConfirm}
-              className="flex items-center gap-2 rounded-xl bg-linear-to-r from-brand to-accent px-5 py-2.5 font-medium text-white shadow-md shadow-brand/25 transition hover:opacity-90 focus-visible:ring-4 focus-visible:ring-brand/30 focus-visible:outline-none"
+              className="flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 font-medium text-white shadow-sm transition hover:opacity-90 focus-visible:ring-4 focus-visible:ring-brand/30 focus-visible:outline-none"
             >
               確認，下一張 → <Kbd>Enter</Kbd>
             </button>

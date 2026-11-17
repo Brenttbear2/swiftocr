@@ -5,8 +5,8 @@
 人工修改欄位後：
     POST /api/check → rules.py 用同一套規則重新驗算 → 回傳結果
 
-啟動方式（在專案根目錄）：
-    .venv\\Scripts\\python.exe -m uvicorn main:app --app-dir backend --reload
+啟動方式（在專案根目錄，先啟用虛擬環境 .venv；開發時改用 uvicorn main:app --app-dir backend --reload）：
+    python backend/main.py
 """
 
 import time
@@ -130,3 +130,13 @@ else:
             "開發時請改開 <a href='http://localhost:5173'>http://localhost:5173</a>。</p>"
             "<p>API 文件：<a href='/docs'>/docs</a></p>"
         )
+
+
+# ════════════════════════ 直接執行這個檔案時：啟動網站 ════════════════════════
+# 「python backend/main.py」執行時，__name__ 會是 "__main__"，才會跑下面這段；
+# 用 uvicorn 指令啟動（start.py 就是這樣）時，這個檔案只是被匯入，不會跑到這裡。
+if __name__ == "__main__":
+    import uvicorn
+
+    print("SwiftOCR 啟動中。看到下面出現 http://127.0.0.1:8000 後，按住 Ctrl 點網址就能開啟；要結束按 Ctrl+C。\n")
+    uvicorn.run(app, host="127.0.0.1", port=8000)

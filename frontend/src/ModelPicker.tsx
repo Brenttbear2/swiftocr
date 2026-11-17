@@ -50,7 +50,7 @@ export default function ModelPicker({ models, selectedModel, onSelect, autoRecog
         onClick={() => setOpen(!open)}
         disabled={!selected}
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white py-2 pr-2.5 pl-3 text-sm shadow-sm transition hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none disabled:opacity-60"
+        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white py-2 pr-2.5 pl-3 text-sm shadow-sm transition hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none disabled:opacity-60"
       >
         <span className="text-slate-400">模型</span>
         <span className="font-medium text-slate-800">{selected?.label ?? "載入中…"}</span>
@@ -60,7 +60,7 @@ export default function ModelPicker({ models, selectedModel, onSelect, autoRecog
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 z-30 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10">
+        <div className="absolute top-full left-0 z-30 mt-2 w-80 rounded-lg border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10">
           {VENDOR_ORDER.map((vendor) => (
             <div key={vendor} className="py-1">
               <p className="px-2.5 pt-1 pb-1.5 text-xs font-medium text-slate-400">{VENDOR_NAMES[vendor]}</p>

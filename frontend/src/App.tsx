@@ -1,10 +1,9 @@
-// 總指揮：保管各畫面共用的資料（狀態），並決定現在要顯示哪一個畫面
-import { useEffect, useState } from "react";
+// 總指揮：保管共用的資料（狀態）、管理辨識的隊伍，並把資料交給工作畫面
+import { useEffect, useRef, useState } from "react";
 import { checkInvoice, getHealth, getModels, recognizeInvoice, type HealthStatus, type InvoiceData, type ModelInfo } from "./api";
 import { mergeWarnings, type FieldKey, type QueueItem } from "./invoice";
 import { downloadReport, type ExportFormat } from "./report";
 import UploadPage from "./UploadPage";
-import WelcomePage from "./WelcomePage";
 
 let nextId = 1; // 佇列項目的流水號，每放進一張就 +1
 
@@ -19,15 +18,22 @@ function loadAutoRecognize(): boolean {
   }
 }
 
+/** 排隊等辨識的一項工作：哪一張、哪個檔案、用哪個模型 */
+type Job = { id: string; file: File; model: string };
+
 export default function App() {
   // ── 狀態 ──
-  const [page, setPage] = useState<"welcome" | "upload">("welcome"); // 目前顯示的畫面
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [selectedModel, setSelectedModel] = useState(""); // 選中模型的 id
   const [error, setError] = useState("");
   const [items, setItems] = useState<QueueItem[]>([]); // 放進來的發票（佇列）
   const [autoRecognize, setAutoRecognize] = useState(loadAutoRecognize); // 放進來就自動辨識嗎
+
+  // 等待辨識的隊伍，全系統只有這一條。放在 useRef 裡：它不用顯示在畫面上，
+  // 而且下面的迴圈跑到一半時，也要讀得到「最新」的隊伍（useState 的值在迴圈裡是舊的）
+  const queueRef = useRef<Job[]>([]);
+  const runningRef = useRef(false); // 是不是已經有迴圈在處理隊伍了
 
   // ── 畫面第一次出現時，向後端要資料（只做一次） ──
   useEffect(() => {
@@ -79,15 +85,25 @@ export default function App() {
     }
   }
 
-  // 依序辨識一批：一張辨識完才送下一張（避免同時送太多請求被限流）
-  async function recognizeInOrder(list: QueueItem[], model: string) {
-    for (const item of list) {
-      await recognize(item.id, item.file, model);
-    }
+  // 把工作排進隊伍。不管分幾次放進來，都排在同一條隊伍後面
+  function enqueue(jobs: Job[]) {
+    queueRef.current.push(...jobs);
+    runQueue();
   }
 
-  // 使用者放進檔案：先全部加入佇列；自動模式就馬上依序辨識，手動模式等按「開始辨識」
-  async function addFiles(files: File[]) {
+  // 處理隊伍：一張辨識完才送下一張（避免同時送太多請求被限流），直到隊伍空了
+  async function runQueue() {
+    if (runningRef.current) return; // 已經有迴圈在跑：新排進來的，它會接著處理
+    runningRef.current = true;
+    while (queueRef.current.length > 0) {
+      const job = queueRef.current.shift()!; // 從隊伍最前面拿一項出來
+      await recognize(job.id, job.file, job.model);
+    }
+    runningRef.current = false;
+  }
+
+  // 使用者放進檔案：先全部加入佇列；自動模式就排隊辨識，手動模式等按「開始辨識」
+  function addFiles(files: File[]) {
     const newItems: QueueItem[] = files.map((file) => ({
       id: String(nextId++),
       file,
@@ -103,16 +119,22 @@ export default function App() {
       error: "",
     }));
     setItems((prev) => [...prev, ...newItems]);
-    if (autoRecognize) await recognizeInOrder(newItems, selectedModel);
+    if (autoRecognize) enqueue(newItems.map((item) => ({ id: item.id, file: item.file, model: selectedModel })));
   }
 
-  // 手動模式按「開始辨識」：還沒辨識的全部排進佇列，用「現在」選的模型依序辨識
-  async function startRecognize() {
+  // 手動模式按「開始辨識」：還沒辨識的全部排進隊伍，用「現在」選的模型依序辨識
+  function startRecognize() {
     const idle = items.filter((item) => item.status === "idle");
     setItems((prev) =>
       prev.map((item) => (item.status === "idle" ? { ...item, status: "waiting", model: selectedModel } : item)),
     );
-    await recognizeInOrder(idle, selectedModel);
+    enqueue(idle.map((item) => ({ id: item.id, file: item.file, model: selectedModel })));
+  }
+
+  // 重試一張（失敗後、或想換模型再辨識一次）：一樣排進隊伍，不插隊
+  function retry(item: QueueItem) {
+    updateItem(item.id, { status: "waiting", model: selectedModel, error: "" });
+    enqueue([{ id: item.id, file: item.file, model: selectedModel }]);
   }
 
   // 移除一張還沒辨識的發票（放錯檔案時用）：先還掉縮圖的暫時網址，再從佇列拿掉
@@ -158,6 +180,7 @@ export default function App() {
           return { ...item, data, warnings: mergeWarnings(item, data, checked.warnings) };
         }),
       );
+      setError(""); // 這次成功了：上次失敗留下的提示可以收掉
     } catch (err) {
       setError((err as Error).message);
     }
@@ -179,6 +202,7 @@ export default function App() {
     if (unsavedCount > 0 && !window.confirm(`還有 ${unsavedCount} 張已確認的發票還沒匯出，清除後就找不回來了。確定要清除嗎？`)) {
       return;
     }
+    queueRef.current = []; // 還在排隊的不用送了，免得白花辨識費用（正在辨識的那一張來不及取消）
     items.forEach((item) => URL.revokeObjectURL(item.previewUrl));
     setItems([]);
   }
@@ -186,54 +210,60 @@ export default function App() {
   // ── 畫面 ──
   return (
     <div className="relative flex min-h-screen flex-col">
-      {/* 頂列：只有 logo，點了回到啟動畫面。啟動畫面時透明、疊在畫面上，讓右半的漸層延伸到最上面 */}
-      <header className={page === "welcome" ? "absolute inset-x-0 top-0 z-10" : "border-b border-slate-200 bg-white"}>
-        <div className="mx-auto flex h-16 max-w-7xl items-center px-6">
-          <button type="button" onClick={() => setPage("welcome")} className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-brand to-accent text-white shadow-md shadow-brand/30">
-              {/* 閃電圖示（沿用舊版 SwiftOCR 的 logo） */}
-              <svg viewBox="0 0 24 24" fill="currentColor" className="size-5">
-                <path d="M12 2L4 13h6l-1 9 9-13h-6l1-9z" />
-              </svg>
-            </span>
-            <span className="text-lg font-bold tracking-tight">
-              Swift<span className="text-brand">OCR</span>
-            </span>
-          </button>
+      {/* 頂列：logo 與一句話說明 */}
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-6">
+          <span className="flex size-8 items-center justify-center rounded-md bg-brand text-white">
+            {/* 閃電圖示（沿用舊版 SwiftOCR 的 logo） */}
+            <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px]">
+              <path d="M12 2L4 13h6l-1 9 9-13h-6l1-9z" />
+            </svg>
+          </span>
+          <span className="text-lg font-bold tracking-tight">
+            Swift<span className="text-brand">OCR</span>
+          </span>
+          <span className="hidden border-l border-slate-200 pl-3 text-sm text-slate-500 sm:inline">台灣統一發票辨識與審核</span>
         </div>
       </header>
 
-      {/* 依照 page 狀態，二選一顯示 */}
-      {page === "welcome" ? (
-        <WelcomePage onStart={() => setPage("upload")} />
-      ) : (
-        <UploadPage
-          models={models}
-          selectedModel={selectedModel}
-          onSelectModel={setSelectedModel}
-          items={items}
-          onAddFiles={addFiles}
-          autoRecognize={autoRecognize}
-          onAutoRecognizeChange={changeAutoRecognize}
-          onStart={startRecognize}
-          onRemove={removeItem}
-          onRetry={(item) => recognize(item.id, item.file, selectedModel)}
-          onClear={clearAll}
-          onEditField={editField}
-          onRecheck={recheck}
-          onConfirm={setConfirmed}
-          onExport={exportConfirmed}
-        />
-      )}
+      {/* 整個系統只有這一個工作畫面：打開就能放發票 */}
+      <UploadPage
+        models={models}
+        selectedModel={selectedModel}
+        onSelectModel={setSelectedModel}
+        items={items}
+        onAddFiles={addFiles}
+        autoRecognize={autoRecognize}
+        onAutoRecognizeChange={changeAutoRecognize}
+        onStart={startRecognize}
+        onRemove={removeItem}
+        onRetry={retry}
+        onClear={clearAll}
+        onEditField={editField}
+        onRecheck={recheck}
+        onConfirm={setConfirmed}
+        onExport={exportConfirmed}
+      />
 
       {/* 系統有問題時才出現的提示，浮在畫面下方；一切正常時什麼都不顯示 */}
       {(error || keyMissing) && (
         <div className="pointer-events-none fixed inset-x-0 bottom-5 z-30 flex flex-col items-center gap-2 px-4">
           {error && (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700 shadow-lg">{error}</p>
+            // 外層設了 pointer-events-none（不擋住後面的畫面），這一條要能按，所以改回 auto
+            <p className="pointer-events-auto flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 py-2 pr-2 pl-4 text-sm text-red-700 shadow-lg">
+              {error}
+              <button
+                type="button"
+                onClick={() => setError("")}
+                aria-label="關閉提示"
+                className="rounded px-1.5 py-0.5 text-red-500 hover:bg-red-100 hover:text-red-800"
+              >
+                ✕
+              </button>
+            </p>
           )}
           {keyMissing && (
-            <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 shadow-lg">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 shadow-lg">
               尚未設定 OpenRouter API Key，辨識功能無法使用（請檢查專案根目錄的 .env）
             </p>
           )}

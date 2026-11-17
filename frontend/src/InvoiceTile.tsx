@@ -25,7 +25,7 @@ export default function InvoiceTile({ item, onOpen, onRetry, onRemove }: Props) 
           : "border-slate-200 hover:border-slate-300";
 
   return (
-    <article className={"group relative overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md " + border}>
+    <article className={"group relative overflow-hidden rounded-lg border bg-white shadow-sm transition hover:shadow-md " + border}>
       <button
         type="button"
         onClick={onOpen}
@@ -52,7 +52,7 @@ export default function InvoiceTile({ item, onOpen, onRetry, onRemove }: Props) 
           {/* 還沒辨識完：縮圖蓋一層白霧；辨識中再加上來回的掃描光 */}
           {busy && <div className="absolute inset-0 bg-white/50" />}
           {item.status === "running" && (
-            <div className="pointer-events-none absolute inset-x-0 h-16 -translate-y-full border-b-2 border-accent bg-linear-to-b from-transparent to-brand/20 motion-safe:animate-scan-loop" />
+            <div className="pointer-events-none absolute inset-x-0 h-16 -translate-y-full border-b-2 border-brand bg-linear-to-b from-transparent to-brand/20 motion-safe:animate-scan-loop" />
           )}
 
           <div className="absolute top-2 right-2 shadow-sm">
