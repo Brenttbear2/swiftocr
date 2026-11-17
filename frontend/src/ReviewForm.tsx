@@ -256,7 +256,7 @@ function Field({ name, item, onEdit, onCommit, onRestore, amount, strong, readOn
   );
 }
 
-// 欄位下方的說明：提醒（⚠ 黃／✓ 靛藍），以及改過的欄位顯示 AI 原值＋還原
+// 欄位下方的說明：提醒（⚠ 黃／✓ 主色），以及改過的欄位顯示 AI 原值＋還原
 type NotesProps = Pick<FieldProps, "name" | "item" | "onRestore"> & {
   canRestore?: boolean; // 唯讀的欄位（由系統計算）不給還原
 };

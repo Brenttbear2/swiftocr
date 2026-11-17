@@ -65,7 +65,7 @@ function TripleForm() {
 
 // 收銀機統一發票（三聯）：中等長度，列出品項
 function CashierReceipt() {
-  const items = [88, 99, 110]; // 三行品項的高度位置
+  const items = [{ y: 88, w: 46 }, { y: 99, w: 54 }, { y: 110, w: 40 }]; // 三行品項：高度位置、品名長度
   return (
     <svg width="104" height="170" viewBox="0 0 104 170" aria-hidden="true" className="max-w-full">
       <rect x="2" y="2" width="100" height="166" rx="2" fill={PAPER} stroke={EDGE} />
@@ -75,9 +75,9 @@ function CashierReceipt() {
       <Bar x={14} y={56} w={50} />
       <Bar x={14} y={66} w={62} />
       <line x1="12" y1="80" x2="92" y2="80" stroke={RULE} strokeDasharray="3 3" />
-      {items.map((y, i) => (
+      {items.map(({ y, w }) => (
         <g key={y}>
-          <Bar x={14} y={y} w={[46, 54, 40][i]} />
+          <Bar x={14} y={y} w={w} />
           <Bar x={72} y={y} w={18} />
         </g>
       ))}

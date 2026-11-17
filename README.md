@@ -52,13 +52,18 @@ cd swiftocr
 
 ### 步驟 2：第一次啟動（自動安裝環境）
 
-**Windows**：在檔案總管打開 `swiftocr` 資料夾，**雙擊 `start.bat`**。
-
-**Mac／Linux**：
+在同一個終端機，接著執行：
 
 ```bash
-python3 start.py
+python start.py      # Windows
+python3 start.py     # Mac／Linux
 ```
+
+`start.py` 會自動建立虛擬環境、安裝前後端套件、打包網頁，最後啟動系統。
+
+> Windows 如果出現找不到 `python`（安裝時沒勾「Add python.exe to PATH」），改用 `py start.py`。
+>
+> 也可以不用終端機：在檔案總管打開 `swiftocr` 資料夾，雙擊 `start.bat`，效果一樣。
 
 ### 步驟 3：填入 API key（只有第一次）
 
@@ -109,7 +114,15 @@ python backend/main.py
 - **用 VS Code**：打開 `backend/main.py`，按右上角的 ▶ 就能啟動。按 `F5` 則是除錯模式，可以設中斷點。
   - 右下角的 Python 版本要選 `.venv`。
 - **改了前端程式**：先在 `frontend` 資料夾執行 `npm run build`，再啟動。
-  - 也可以改雙擊 `start.bat`，它發現前端改過會自動重新打包。
+  - 也可以改用 `python start.py`（或雙擊 `start.bat`），它發現前端改過會自動重新打包。
+
+**啟動方式總整理**
+
+| 情況 | 執行 |
+|---|---|
+| 第一次（剛下載） | `python start.py`（或雙擊 `start.bat`） |
+| 平常使用 | 啟用 `.venv` 後，`python backend/main.py` |
+| 改過前端程式 | `python start.py`，會自動重新打包網頁 |
 
 <details>
 <summary>不想用啟動腳本？手動執行的步驟</summary>
@@ -190,7 +203,7 @@ lsof -i :8000                   # Mac／Linux：找到 PID 後執行 kill <PID>
 照「先準備這 4 樣東西」安裝。裝完要**關掉終端機再重開**，新安裝的程式才找得到。
 
 **Q：改了程式碼，要怎麼更新畫面？**
-關掉視窗，再啟動一次就好。前端程式改過的話，啟動時會自動重新打包。
+在終端機按 `Ctrl + C` 結束，再啟動一次。改的是前端（`frontend/` 裡的程式）的話，要用 `python start.py` 啟動才會自動重新打包；用 `python backend/main.py` 的話，要先在 `frontend` 執行 `npm run build`。
 
 **Q：想看後端有哪些 API？**
 啟動後打開 http://127.0.0.1:8000/docs ，這是 FastAPI 自動產生的 API 文件，可以直接在網頁上試用。
@@ -211,7 +224,7 @@ lsof -i :8000                   # Mac／Linux：找到 PID 後執行 kill <PID>
 回到網頁，由人審核確認
 ```
 
-**檢核規則與項目：
+**檢核規則與項目：**
 
 | 檢查 | 處理方式 |
 |---|---|
