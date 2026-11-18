@@ -141,7 +141,7 @@ def _normalize(raw: dict, warnings: list[RuleWarning]) -> dict:
 
     data["format"] = to_int_or_none(raw.get("format"))
 
-    # 發票號碼：轉大寫，去掉空白與連字號（票面常印成 MY-27951864）
+    # 發票號碼：轉大寫，去掉空白與連字號（票面常印成 AB-12345678）
     number = clean_text(raw.get("invoice_number"))
     data["invoice_number"] = re.sub(r"[\s-]", "", number).upper() if number else None
 

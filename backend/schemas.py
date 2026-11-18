@@ -23,7 +23,7 @@ class InvoiceData(BaseModel):
 
     type: InvoiceType | None = Field(None, description="發票類型")
     format: int | None = Field(None, description="稅額編碼：21 / 25 / 22")
-    invoice_number: str | None = Field(None, description="發票號碼，2 個大寫英文字母 + 8 位數字", examples=["MY27951864"])
+    invoice_number: str | None = Field(None, description="發票號碼，2 個大寫英文字母 + 8 位數字", examples=["AB12345678"])
     date: str | None = Field(None, description="開立日期（西元 YYYY-MM-DD）", examples=["2023-06-30"])
     buyer_taxno: str | None = Field(None, description="買受人統一編號（8 碼）")
     seller_taxno: str | None = Field(None, description="賣方統一編號（8 碼）")

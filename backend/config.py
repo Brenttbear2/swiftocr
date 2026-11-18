@@ -47,3 +47,7 @@ LLM_MAX_RETRIES = 1          # 連線失敗時自動重試的次數
 MAX_UPLOAD_MB = 10
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 PDF_RENDER_SCALE = 2.0       # PDF 轉圖時放大倍數，數字越大小字越清楚，但檔案也越大
+
+# ── 安全：只接受本機的請求（main.py 的 only_local_requests 使用） ──
+LOCAL_HOSTS = {"127.0.0.1", "localhost"}
+

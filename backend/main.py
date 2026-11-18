@@ -10,6 +10,7 @@
 """
 
 import time
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -114,6 +115,20 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
         else:
             problems.append(f"欄位 {field} 格式不正確")
     return JSONResponse(status_code=422, content={"detail": "；".join(problems)})
+
+
+# ════════════════════════ 只接受本機的請求 ════════════════════════
+# 系統開著時，你瀏覽的其他網站也能叫瀏覽器對 127.0.0.1:8000 送請求，
+# 惡意網頁就可能偷偷送發票去辨識、花掉你的 OpenRouter 額度。下面擋掉兩種情況：
+# 1. 網址的主機名稱不是本機：擋「DNS rebinding」（壞人用自己的網域，偷偷指向你的電腦）
+# 2. 請求來自別的網站的網頁：瀏覽器會在 Origin 標頭寫上送出請求的網站，網頁沒辦法假造
+@app.middleware("http")
+async def only_local_requests(request: Request, call_next):
+    origin = request.headers.get("origin")  # 用 curl、start.py 直接呼叫時沒有這個標頭
+    from_other_site = origin is not None and urlparse(origin).hostname not in config.LOCAL_HOSTS
+    if request.url.hostname not in config.LOCAL_HOSTS or from_other_site:
+        return JSONResponse(status_code=403, content={"detail": "只接受本機網頁的請求"})
+    return await call_next(request)  # 檢查通過：交給原本負責的 API 處理
 
 
 # ════════════════════════ 前端網頁 ════════════════════════
