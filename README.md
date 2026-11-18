@@ -100,9 +100,12 @@ SwiftOCR 啟動中：http://127.0.0.1:8000
 
 ### 之後每次使用
 
-環境裝好之後，直接執行 Python 主程式：
+環境裝好之後，直接執行 Python 主程式。**每開一個新的終端機，都要先進入專案資料夾**（VS Code 的終端機會自動在專案資料夾，可以省略第 0 步）：
 
 ```bash
+# 0. 進入專案資料夾（換成你 clone 的位置；路徑有空白要加引號）
+cd swiftocr
+
 # 1. 啟用虛擬環境（每開一個新的終端機要做一次）
 .venv\Scripts\activate          # Windows
 source .venv/bin/activate       # Mac／Linux
@@ -202,6 +205,9 @@ lsof -i :8000                   # Mac／Linux：找到 PID 後執行 kill <PID>
 
 **Q：畫面下方出現黃色提示「尚未設定 OpenRouter API Key」，或辨識失敗說 key 無效**
 打開專案資料夾裡的 `.env`，確認 `OPENROUTER_API_KEY=` 後面是你的 key（前後不要有空白），存檔後關掉視窗再啟動一次。
+
+**Q：出現「無法載入模組 '.venv'」或「can't open file ... backend\main.py」**
+終端機不在專案資料夾裡。看提示字元（例如 `PS C:\Users\你的名字>`）就知道現在在哪裡，先 `cd` 到專案資料夾再執行。
 
 **Q：顯示「找不到 Python」或「找不到 Node.js」**
 照「先準備這 4 樣東西」安裝。裝完要**關掉終端機再重開**，新安裝的程式才找得到。
