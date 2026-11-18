@@ -141,7 +141,7 @@ else:
     def frontend_not_built() -> HTMLResponse:
         return HTMLResponse(
             "<h2>前端尚未打包</h2>"
-            "<p>請在 frontend 資料夾執行 <code>npm install</code> 與 <code>npm run build</code> 後重新啟動；"
+            "<p>請在 frontend 資料夾執行 <code>npm ci</code> 與 <code>npm run build</code> 後重新啟動；"
             "開發時請改開 <a href='http://localhost:5173'>http://localhost:5173</a>。</p>"
             "<p>API 文件：<a href='/docs'>/docs</a></p>"
         )

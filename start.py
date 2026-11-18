@@ -98,7 +98,7 @@ def main() -> None:
             print("接著會用記事本打開它，存檔並關閉記事本後繼續。")
             subprocess.run(["notepad", str(ENV_FILE)])
         else:
-            input("用編輯器打開專案根目錄的 .env 填好、存檔後，回到這裡按 Enter 繼續…")
+            input("另開一個終端機，在專案資料夾執行 open -e .env（Linux 用任何編輯器）填好、存檔後，回到這裡按 Enter 繼續…")
     if "xxxxxxxx" in ENV_FILE.read_text(encoding="utf-8"):
         print("提醒：.env 裡的 key 還是範本的假值，可以先啟動看看畫面，但辨識會失敗。")
 
@@ -113,7 +113,7 @@ def main() -> None:
         print("[準備 1/2] 安裝後端套件（約 1～2 分鐘）")
         pip = [str(VENV_PYTHON), "-m", "pip", "install", "--disable-pip-version-check", "-r", "backend/requirements.txt"]
         if not run(pip):
-            stop("後端套件安裝失敗，請確認網路連線後再執行一次。")
+            stop("後端套件安裝失敗，請看上面的錯誤訊息（常見原因：網路中斷、Python 版本不符）。")
 
     # ── 6. 前端：沒打包過、或程式改過了，就重新打包（需要 Node.js） ──
     frontend = ROOT / "frontend"
@@ -122,11 +122,11 @@ def main() -> None:
     if need_install or need_build:
         npm = shutil.which("npm")
         if npm is None:
-            stop("找不到 Node.js。請先安裝 Node.js 22 以上：https://nodejs.org/")
+            stop("找不到 Node.js。請先安裝 Node.js 22.12 以上（LTS 版即可）：https://nodejs.org/")
         if need_install:
             print("[準備 2/2] 安裝前端套件（約 1 分鐘）")
             if not run([npm, "ci", "--no-audit", "--no-fund"], cwd=frontend):
-                stop("前端套件安裝失敗，請確認網路連線後再執行一次。")
+                stop("前端套件安裝失敗，請看上面的錯誤訊息（常見原因：網路中斷、Node.js 版本太舊）。")
         built = (frontend / "dist" / "index.html").exists()
         print("[準備 2/2] 前端程式有更新，重新打包網頁" if built else "[準備 2/2] 打包網頁")
         if not run([npm, "run", "build"], cwd=frontend):

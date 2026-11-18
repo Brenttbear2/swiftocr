@@ -33,9 +33,9 @@
 
 | 項目 | 用途 | 下載 |
 |---|---|---|
-| Git | 下載程式碼 | https://git-scm.com/downloads |
+| Git | 下載程式碼 | https://git-scm.com/downloads （Mac 第一次輸入 `git` 會跳出安裝「命令列開發者工具」的視窗，按「安裝」即可） |
 | Python 3.11 以上 | 執行後端 | https://www.python.org/downloads/ （Windows 安裝時記得勾選「Add python.exe to PATH」） |
-| Node.js 22 以上 | 打包網頁 | https://nodejs.org/ （選 LTS 版） |
+| Node.js 22.12 以上 | 打包網頁 | https://nodejs.org/ （選 LTS 版即可；22.0～22.11 會打包失敗） |
 | OpenRouter API key | 呼叫 AI 模型 | https://openrouter.ai/keys （註冊後儲值少量金額即可） |
 
 > 💰 辨識會消耗 OpenRouter 的金額，每張發票辨識完，畫面上會顯示這次的實際費用（美元）。
@@ -54,6 +54,8 @@ git clone https://github.com/Brenttbear2/swiftocr.git
 cd swiftocr
 ```
 
+> 沒有安裝 Git 也可以在 GitHub 頁面按「Code → Download ZIP」，解壓縮後的資料夾叫 `swiftocr-main`，之後的 `cd swiftocr` 都換成 `cd swiftocr-main`。
+
 ### 步驟 2：第一次啟動（自動安裝環境）
 
 在同一個終端機，接著執行：
@@ -71,14 +73,17 @@ python3 start.py     # Mac／Linux
 
 ### 步驟 3：填入 API key（只有第一次）
 
-第一次啟動時，程式會建立一個 `.env` 檔案並打開它（Windows 會用記事本打開）。把 `OPENROUTER_API_KEY=` 後面的假 key 換成你的 key，存檔：
+第一次啟動時，程式會在專案資料夾建立一個 `.env` 檔案，然後停下來等你填 key：
+
+- **Windows**：程式會用記事本打開 `.env`。填好、存檔，**關掉記事本**，程式就會自動繼續。
+- **Mac**：程式不會自己打開檔案。**另開一個終端機**，進入專案資料夾執行 `open -e .env`，填好、存檔後，回到原本的終端機按 `Enter` 繼續。
+  - `.env` 是隱藏檔，在 Finder 裡預設看不到，要按 `Command + Shift + .` 才會顯示。
+
+要改的只有這一行，把 `=` 後面的假 key 換成你在 OpenRouter 申請的 key：
 
 ```bash
-# 把 = 後面換成你在 OpenRouter 申請的 key
 OPENROUTER_API_KEY=sk-or-v1-你的key
 ```
-
-關掉記事本後，程式會自動繼續。
 
 ### 步驟 4：等它準備好
 
@@ -96,7 +101,7 @@ SwiftOCR 啟動中：http://127.0.0.1:8000
 接著**瀏覽器會自動打開**，就會看到 SwiftOCR 的工作畫面
 
 - 使用時，那個黑色（或終端機）視窗**不要關**
-- 要結束時，在視窗按 `Ctrl + C`，或直接關掉視窗
+- 要結束時，在視窗按 `Ctrl + C`，或直接關掉視窗（用 `start.bat` 啟動的話，按 `Ctrl + C` 會問「終止批次工作 (Y/N)?」，按 `Y` 再按 Enter）
 
 ### 之後每次使用
 
@@ -106,17 +111,14 @@ SwiftOCR 啟動中：http://127.0.0.1:8000
 # 0. 進入專案資料夾（換成你 clone 的位置；路徑有空白要加引號）
 cd swiftocr
 
-# 1. 啟用虛擬環境（每開一個新的終端機要做一次）
-.venv\Scripts\activate          # Windows
-source .venv/bin/activate       # Mac／Linux
-
-# 2. 啟動
-python backend/main.py
+# 1. 用專案自己的 Python（裝在 .venv 裡）啟動
+.venv\Scripts\python backend\main.py     # Windows
+.venv/bin/python backend/main.py         # Mac／Linux
 ```
 
 看到 `Uvicorn running on http://127.0.0.1:8000`，按住 `Ctrl` 點這個網址（或複製到瀏覽器）就能使用。
 
-> Windows PowerShell 啟用虛擬環境時，如果出現「已停用指令碼執行」，可以不啟用，直接執行 `.venv\Scripts\python backend\main.py`。
+> 習慣先啟用虛擬環境的話也可以：Windows 執行 `.venv\Scripts\activate`、Mac 執行 `source .venv/bin/activate`，之後直接打 `python backend/main.py`。Windows PowerShell 預設會擋啟用指令（出現「已停用指令碼執行」），所以上面改用不需要啟用的寫法。
 
 - **用 VS Code**：打開 `backend/main.py`，按右上角的 ▶ 就能啟動。按 `F5` 則是除錯模式，可以設中斷點。
   - 右下角的 Python 版本要選 `.venv`。
@@ -128,7 +130,7 @@ python backend/main.py
 | 情況 | 執行 |
 |---|---|
 | 第一次（剛下載） | `python start.py`（或雙擊 `start.bat`） |
-| 平常使用 | 啟用 `.venv` 後，`python backend/main.py` |
+| 平常使用 | `.venv\Scripts\python backend\main.py`（Mac：`.venv/bin/python backend/main.py`） |
 | 改過前端程式 | `python start.py`，會自動重新打包網頁 |
 
 <details>
@@ -140,25 +142,23 @@ python backend/main.py
 # 1. 建立 Python 虛擬環境（專案專用的 Python，不會影響電腦裡其他程式）
 python -m venv .venv            # Mac／Linux 請把 python 換成 python3
 
-# 2. 啟用虛擬環境
-.venv\Scripts\activate          # Windows
-source .venv/bin/activate       # Mac／Linux
+# 2. 用 .venv 裡的 Python 安裝後端套件
+.venv\Scripts\python -m pip install -r backend/requirements.txt     # Windows
+.venv/bin/python -m pip install -r backend/requirements.txt         # Mac／Linux
 
-# 3. 安裝後端套件
-pip install -r backend/requirements.txt
-
-# 4. 建立 .env：複製範本，再用編輯器填入你的 key
+# 3. 建立 .env：複製範本，再用編輯器填入你的 key
 copy .env.example .env          # Windows
 cp .env.example .env            # Mac／Linux
 
-# 5. 安裝前端套件並打包網頁
+# 4. 安裝前端套件並打包網頁
 cd frontend
 npm ci
 npm run build
 cd ..
 
-# 6. 啟動，然後用瀏覽器打開 http://127.0.0.1:8000
-python backend/main.py
+# 5. 啟動，然後用瀏覽器打開 http://127.0.0.1:8000
+.venv\Scripts\python backend\main.py     # Windows
+.venv/bin/python backend/main.py         # Mac／Linux
 ```
 
 </details>
@@ -196,8 +196,8 @@ python backend/main.py
 
 ## 常見問題
 
-**Q：出現「port 8000 已經被別的程式佔用」**
-有其他程式用了 8000 這個連接埠。找出是哪個程式並關掉它：
+**Q：出現「port 8000 已經被別的程式佔用」（用 `backend/main.py` 啟動時是英文的 `[Errno 10048]` 或 `address already in use`）**
+有其他程式用了 8000 這個連接埠，常見的是你已經開了一個 SwiftOCR 視窗。找出是哪個程式並關掉它：
 ```bash
 netstat -ano | findstr :8000    # Windows：最後一欄是程式編號（PID），到工作管理員找到它並結束
 lsof -i :8000                   # Mac／Linux：找到 PID 後執行 kill <PID>
@@ -206,14 +206,17 @@ lsof -i :8000                   # Mac／Linux：找到 PID 後執行 kill <PID>
 **Q：畫面下方出現黃色提示「尚未設定 OpenRouter API Key」，或辨識失敗說 key 無效**
 打開專案資料夾裡的 `.env`，確認 `OPENROUTER_API_KEY=` 後面是你的 key（前後不要有空白），存檔後關掉視窗再啟動一次。
 
-**Q：出現「無法載入模組 '.venv'」或「can't open file ... backend\main.py」**
+**Q：出現「無法辨識 '.venv\Scripts\python'」「無法載入模組 '.venv'」或「can't open file ... backend\main.py」**
 終端機不在專案資料夾裡。看提示字元（例如 `PS C:\Users\你的名字>`）就知道現在在哪裡，先 `cd` 到專案資料夾再執行。
+
+**Q：出現 `ModuleNotFoundError: No module named 'fastapi'`**
+用到了電腦本身的 Python，而不是專案 `.venv` 裡的 Python（套件只裝在 `.venv` 裡）。改用 `.venv\Scripts\python backend\main.py`（Mac：`.venv/bin/python backend/main.py`）。如果 `.venv` 還不存在，先執行一次 `python start.py`。
 
 **Q：顯示「找不到 Python」或「找不到 Node.js」**
 照「先準備這 4 樣東西」安裝。裝完要**關掉終端機再重開**，新安裝的程式才找得到。
 
 **Q：改了程式碼，要怎麼更新畫面？**
-在終端機按 `Ctrl + C` 結束，再啟動一次。改的是前端（`frontend/` 裡的程式）的話，要用 `python start.py` 啟動才會自動重新打包；用 `python backend/main.py` 的話，要先在 `frontend` 執行 `npm run build`。
+在終端機按 `Ctrl + C` 結束，再啟動一次。改的是前端（`frontend/` 裡的程式）的話，要用 `python start.py` 啟動才會自動重新打包；直接執行 `backend/main.py` 的話，要先在 `frontend` 執行 `npm run build`。
 
 **Q：想看後端有哪些 API？**
 啟動後打開 http://127.0.0.1:8000/docs ，這是 FastAPI 自動產生的 API 文件，可以直接在網頁上試用。
